@@ -296,7 +296,7 @@ export function TabActionDialog({ open, mode, onOpenChange }: TabActionDialogPro
               onValueChange={(v) => setSelectedConnectionId(v ?? '')}
             >
               <SelectTrigger id="tab-action-connection" className="h-8">
-                <SelectValue />
+                <SelectValue>{selectedConnection?.info.name}</SelectValue>
               </SelectTrigger>
               <SelectContent className="bg-zinc-950 border-zinc-800">
                 {activeConnections.length === 0 ? (
@@ -322,7 +322,13 @@ export function TabActionDialog({ open, mode, onOpenChange }: TabActionDialogPro
               disabled={!selectedConnectionId || isLoadingDatabases}
             >
               <SelectTrigger id="tab-action-database" className="h-8">
-                <SelectValue />
+                <SelectValue>
+                  {selectedDatabase || (
+                    <span className="text-muted-foreground">
+                      {isLoadingDatabases ? 'Loading...' : 'Select database'}
+                    </span>
+                  )}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent className="bg-zinc-950 border-zinc-800">
                 {databases.length === 0 ? (
@@ -349,7 +355,13 @@ export function TabActionDialog({ open, mode, onOpenChange }: TabActionDialogPro
                 disabled={!selectedDatabase || isLoadingSchemas}
               >
                 <SelectTrigger id="tab-action-schema" className="h-8">
-                  <SelectValue />
+                  <SelectValue>
+                    {selectedSchema || (
+                      <span className="text-muted-foreground">
+                        {isLoadingSchemas ? 'Loading...' : 'Select schema'}
+                      </span>
+                    )}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent className="bg-zinc-950 border-zinc-800">
                   {schemas.length === 0 ? (
@@ -381,7 +393,13 @@ export function TabActionDialog({ open, mode, onOpenChange }: TabActionDialogPro
                 }
               >
                 <SelectTrigger id="tab-action-table" className="h-8">
-                  <SelectValue />
+                  <SelectValue>
+                    {selectedTable || (
+                      <span className="text-muted-foreground">
+                        {isLoadingTables ? 'Loading...' : 'Select table'}
+                      </span>
+                    )}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent className="bg-zinc-950 border-zinc-800">
                   {tables.length === 0 ? (

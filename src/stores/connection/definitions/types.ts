@@ -66,6 +66,8 @@ export interface ConnectionStore {
     table: string,
   ) => void
   removeQueryTab: (id: string) => void
+  reorderQueryTabs: (fromIndex: number, toIndex: number) => void
+  renameQueryTab: (tabId: string, customName: string | undefined) => void
   updateQueryTab: (id: string, updates: Partial<QueryTab>) => void
   setQueryResult: (tabId: string, result: QueryResult) => void
   setQueryError: (tabId: string, error: string) => void

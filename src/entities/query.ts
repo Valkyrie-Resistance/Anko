@@ -43,6 +43,8 @@ export interface QueryTab {
   result?: QueryResult
   isExecuting: boolean
   error?: string
+  // Custom name for the tab (user-defined)
+  customName?: string
   // Table browsing mode
   tableName?: string
   databaseName?: string // For PostgreSQL: the actual database name; For MySQL: the database name

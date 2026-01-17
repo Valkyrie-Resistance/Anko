@@ -190,6 +190,26 @@ export const useConnectionStore = create<ConnectionStore>()(
               draft.queryTabs.length > 0 ? draft.queryTabs[draft.queryTabs.length - 1].id : null
           }
         }),
+      reorderQueryTabs: (fromIndex, toIndex) =>
+        set((draft) => {
+          if (fromIndex === toIndex) return
+          if (fromIndex < 0 || fromIndex >= draft.queryTabs.length) return
+          if (toIndex < 0 || toIndex >= draft.queryTabs.length) return
+
+          storeLogger.debug('reorderQueryTabs', { fromIndex, toIndex })
+          const [tab] = draft.queryTabs.splice(fromIndex, 1)
+          draft.queryTabs.splice(toIndex, 0, tab)
+          draft.queryTabsById = rebuildTabsMap(draft.queryTabs)
+        }),
+      renameQueryTab: (tabId, customName) =>
+        set((draft) => {
+          const tab = draft.queryTabs.find((t) => t.id === tabId)
+          if (tab) {
+            storeLogger.debug('renameQueryTab', { tabId, customName })
+            tab.customName = customName
+            draft.queryTabsById = rebuildTabsMap(draft.queryTabs)
+          }
+        }),
       updateQueryTab: (id, updates) =>
         set((draft) => {
           const tab = draft.queryTabs.find((t) => t.id === id)

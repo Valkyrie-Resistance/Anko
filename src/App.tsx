@@ -12,6 +12,8 @@ import { TabContainer } from '@/components/layout/tabs'
 import { AppSidebar } from '@/components/sidebar/AppSidebar'
 import { ThemeProvider } from '@/components/theme/ThemeProvider'
 import { Toaster } from '@/components/ui/sonner'
+import { UpdateModal } from '@/components/update/UpdateModal'
+import { useUpdateChecker } from '@/hooks/useUpdateChecker'
 import { listConnections } from '@/lib/tauri'
 import { useConnectionStore } from '@/stores/connection'
 import { useLeftSidebarStore } from '@/stores/left-sidebar'
@@ -31,6 +33,9 @@ function App() {
 
   // Close app dialog state
   const [showCloseDialog, setShowCloseDialog] = useState(false)
+
+  // Check for updates on startup
+  useUpdateChecker()
 
   // Load saved connections on mount
   useEffect(() => {
@@ -133,6 +138,7 @@ function App() {
           }}
           onCancel={() => setShowCloseDialog(false)}
         />
+        <UpdateModal />
       </ThemeProvider>
     </ErrorBoundary>
   )

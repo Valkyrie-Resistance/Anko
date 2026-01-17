@@ -21,14 +21,14 @@ export function TitleBar({ onToggleLeftSidebar, onToggleRightSidebar }: TitleBar
   return (
     <div
       data-tauri-drag-region
-      className="fixed top-0 left-0 right-0 h-9 flex items-center bg-background border-b z-50"
+      className="fixed top-0 left-0 right-0 h-9 flex items-center bg-background border-b z-50 select-none"
     >
       {/* Left section - Space for traffic lights */}
       <div data-tauri-drag-region className="flex items-center h-full pl-20 w-20" />
 
       {/* Center section - App name with status */}
-      <div data-tauri-drag-region className="flex-1 flex items-center justify-center h-full gap-2">
-        <span data-tauri-drag-region className="text-xs text-muted-foreground select-none">
+      <div data-tauri-drag-region className="flex-1 flex items-center justify-center h-full gap-2 pointer-events-none">
+        <span className="text-xs text-muted-foreground">
           Anko
         </span>
         <Badge

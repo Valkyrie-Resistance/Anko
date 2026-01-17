@@ -34,6 +34,15 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "createUpdaterArtifacts": true
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEZBNjQ3M0M5NUI3QjUxQzcKUldUSFVYdGJ5WE5rK3JqUjQyc1dEaHBTUXlHMVlFQlZ6Vi9PYXZDVVM1SHoyaGQ4RDZkTVYyOVUK",
+      "endpoints": [
+        "https://github.com/Valkyrie-Resistance/Anko/releases/latest/download/latest.json"
+      ]
+    }
   }
 }

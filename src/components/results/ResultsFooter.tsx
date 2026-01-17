@@ -1,4 +1,5 @@
-import { ChevronDown, Settings } from 'lucide-react'
+import { ChevronDown } from 'lucide-react'
+import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import {
   DropdownMenu,
@@ -6,12 +7,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { exportToCSV, exportToJSON, exportToSQL } from '@/lib/export-utils'
 import { cn } from '@/lib/utils'
 import type { QueryResult } from '@/types'
 
 interface ResultsFooterProps {
   result?: QueryResult
   isExecuting?: boolean
+  tableName?: string
 }
 
 /**
@@ -24,7 +27,7 @@ function getPerformanceBadgeColor(ms: number): string {
   return 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
 }
 
-export function ResultsFooter({ result, isExecuting }: ResultsFooterProps) {
+export function ResultsFooter({ result, isExecuting, tableName }: ResultsFooterProps) {
   const getStatusText = () => {
     if (isExecuting) return 'Executing...'
     if (!result) return 'No Data'
@@ -35,6 +38,50 @@ export function ResultsFooter({ result, isExecuting }: ResultsFooterProps) {
   }
 
   const executionTime = result?.execution_time_ms
+  const hasData = result && result.columns.length > 0 && result.rows.length > 0
+  const defaultFilename = tableName || 'query_results'
+
+  const handleExportCSV = async () => {
+    if (!result) return
+    try {
+      const exported = await exportToCSV(result, defaultFilename)
+      if (exported) {
+        toast.success('Exported to CSV')
+      }
+    } catch (error) {
+      toast.error('Export failed', {
+        description: error instanceof Error ? error.message : 'Unknown error',
+      })
+    }
+  }
+
+  const handleExportJSON = async () => {
+    if (!result) return
+    try {
+      const exported = await exportToJSON(result, defaultFilename)
+      if (exported) {
+        toast.success('Exported to JSON')
+      }
+    } catch (error) {
+      toast.error('Export failed', {
+        description: error instanceof Error ? error.message : 'Unknown error',
+      })
+    }
+  }
+
+  const handleExportSQL = async () => {
+    if (!result) return
+    try {
+      const exported = await exportToSQL(result, tableName || 'table_name', defaultFilename)
+      if (exported) {
+        toast.success('Exported to SQL')
+      }
+    } catch (error) {
+      toast.error('Export failed', {
+        description: error instanceof Error ? error.message : 'Unknown error',
+      })
+    }
+  }
 
   return (
     <div className="flex items-center justify-between px-3 py-1.5 border-t border-zinc-900 bg-zinc-950 text-xs">
@@ -58,31 +105,39 @@ export function ResultsFooter({ result, isExecuting }: ResultsFooterProps) {
       <div className="flex items-center gap-1">
         <DropdownMenu>
           <DropdownMenuTrigger
-            className="flex items-center gap-1 px-2 py-1 text-zinc-400 hover:text-zinc-300 hover:bg-zinc-900 rounded transition-colors"
+            className={cn(
+              'flex items-center gap-1 px-2 py-1 rounded transition-colors',
+              hasData
+                ? 'text-zinc-400 hover:text-zinc-300 hover:bg-zinc-900'
+                : 'text-zinc-600 cursor-not-allowed',
+            )}
+            disabled={!hasData}
             render={<button type="button" />}
           >
             Download
             <ChevronDown className="size-3" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="bg-zinc-950 border-zinc-800">
-            <DropdownMenuItem className="text-xs text-zinc-300 focus:bg-zinc-800 focus:text-zinc-200">
+            <DropdownMenuItem
+              onClick={handleExportCSV}
+              className="text-xs text-zinc-300 focus:bg-zinc-800 focus:text-zinc-200"
+            >
               Export as CSV
             </DropdownMenuItem>
-            <DropdownMenuItem className="text-xs text-zinc-300 focus:bg-zinc-800 focus:text-zinc-200">
+            <DropdownMenuItem
+              onClick={handleExportJSON}
+              className="text-xs text-zinc-300 focus:bg-zinc-800 focus:text-zinc-200"
+            >
               Export as JSON
             </DropdownMenuItem>
-            <DropdownMenuItem className="text-xs text-zinc-300 focus:bg-zinc-800 focus:text-zinc-200">
+            <DropdownMenuItem
+              onClick={handleExportSQL}
+              className="text-xs text-zinc-300 focus:bg-zinc-800 focus:text-zinc-200"
+            >
               Export as SQL
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-
-        <button
-          type="button"
-          className="p-1.5 text-zinc-400 hover:text-zinc-300 hover:bg-zinc-900 rounded transition-colors"
-        >
-          <Settings className="size-4" />
-        </button>
       </div>
     </div>
   )

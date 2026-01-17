@@ -1,6 +1,6 @@
 import { IconTable } from '@tabler/icons-react'
-import { Code2, Plus, X } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Code2, Pencil, Plus, X } from 'lucide-react'
+import React, { useCallback, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import {
   DropdownMenu,
@@ -26,6 +26,8 @@ export function TabContainer() {
   const setActiveTabIdRef = useRef(useConnectionStore.getState().setActiveTabId)
   const removeQueryTabRef = useRef(useConnectionStore.getState().removeQueryTab)
   const discardAllChangesRef = useRef(useConnectionStore.getState().discardAllChanges)
+  const reorderQueryTabsRef = useRef(useConnectionStore.getState().reorderQueryTabs)
+  const renameQueryTabRef = useRef(useConnectionStore.getState().renameQueryTab)
 
   // Note: Refs are initialized with getState() above and don't need updating
   // since Zustand store actions are stable references
@@ -38,6 +40,20 @@ export function TabContainer() {
     tabId: string
     targetTabId?: string
   } | null>(null)
+
+  // Drag-and-drop state using mouse events (more reliable than HTML5 drag in Tauri)
+  const [dragState, setDragState] = useState<{
+    isDragging: boolean
+    draggedIndex: number | null
+    overIndex: number | null
+    startX: number
+  }>({ isDragging: false, draggedIndex: null, overIndex: null, startX: 0 })
+  const tabRefs = useRef<Map<number, HTMLDivElement>>(new Map())
+
+  // Tab renaming state
+  const [editingTabId, setEditingTabId] = useState<string | null>(null)
+  const [editingName, setEditingName] = useState('')
+  const editInputRef = useRef<HTMLInputElement>(null)
 
   const hasTabs = queryTabs.length > 0
   const hasConnections = activeConnections.length > 0
@@ -91,9 +107,106 @@ export function TabContainer() {
     setMenuOpen(false)
   }
 
-  const getTabLabel = (tabId: string, connectionId: string) => {
+  const getTabLabel = (tabId: string, connectionId: string, customName?: string) => {
+    if (customName) return customName
     const tabIndex = tabIndicesByConnection.get(connectionId)?.get(tabId) ?? 1
     return `Query #${tabIndex}`
+  }
+
+  // Mouse-based drag-and-drop handlers (more reliable in Tauri than HTML5 drag)
+  const handleMouseDown = (e: React.MouseEvent, index: number) => {
+    if (e.button !== 0) return // Only left click
+    if (editingTabId === queryTabs[index]?.id) return // Don't drag while editing
+
+    setDragState({
+      isDragging: false,
+      draggedIndex: index,
+      overIndex: null,
+      startX: e.clientX,
+    })
+  }
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (dragState.draggedIndex === null) return
+
+    // Start dragging after moving 5px (to differentiate from click)
+    if (!dragState.isDragging && Math.abs(e.clientX - dragState.startX) > 5) {
+      setDragState((prev) => ({ ...prev, isDragging: true }))
+    }
+
+    if (!dragState.isDragging) return
+
+    // Find which tab we're over
+    let overIndex: number | null = null
+    tabRefs.current.forEach((element, idx) => {
+      if (element && idx !== dragState.draggedIndex) {
+        const rect = element.getBoundingClientRect()
+        if (e.clientX >= rect.left && e.clientX <= rect.right) {
+          overIndex = idx
+        }
+      }
+    })
+
+    if (overIndex !== dragState.overIndex) {
+      setDragState((prev) => ({ ...prev, overIndex }))
+    }
+  }, [dragState.draggedIndex, dragState.isDragging, dragState.startX, dragState.overIndex])
+
+  const handleMouseUp = useCallback(() => {
+    if (dragState.isDragging && dragState.draggedIndex !== null && dragState.overIndex !== null) {
+      console.log('[Reorder]', { from: dragState.draggedIndex, to: dragState.overIndex })
+      reorderQueryTabsRef.current(dragState.draggedIndex, dragState.overIndex)
+    }
+    setDragState({ isDragging: false, draggedIndex: null, overIndex: null, startX: 0 })
+  }, [dragState.isDragging, dragState.draggedIndex, dragState.overIndex])
+
+  // Global mouse event listeners for drag
+  React.useEffect(() => {
+    if (dragState.draggedIndex !== null) {
+      window.addEventListener('mousemove', handleMouseMove)
+      window.addEventListener('mouseup', handleMouseUp)
+      return () => {
+        window.removeEventListener('mousemove', handleMouseMove)
+        window.removeEventListener('mouseup', handleMouseUp)
+      }
+    }
+  }, [dragState.draggedIndex, handleMouseMove, handleMouseUp])
+
+  // Tab renaming handlers
+  const handleStartRename = (e: React.MouseEvent, tabId: string, currentName: string) => {
+    e.stopPropagation()
+    setEditingTabId(tabId)
+    setEditingName(currentName)
+    // Focus the input after render
+    setTimeout(() => editInputRef.current?.focus(), 0)
+  }
+
+  const handleRenameSubmit = (tabId: string) => {
+    const trimmedName = editingName.trim()
+    renameQueryTabRef.current(tabId, trimmedName || undefined)
+    setEditingTabId(null)
+    setEditingName('')
+  }
+
+  const handleRenameCancel = () => {
+    setEditingTabId(null)
+    setEditingName('')
+  }
+
+  const handleRenameKeyDown = (e: React.KeyboardEvent, tabId: string) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      handleRenameSubmit(tabId)
+    } else if (e.key === 'Escape') {
+      e.preventDefault()
+      handleRenameCancel()
+    }
+  }
+
+  const handleTabDoubleClick = (e: React.MouseEvent, tabId: string, connectionId: string, customName?: string) => {
+    e.stopPropagation()
+    const currentLabel = getTabLabel(tabId, connectionId, customName)
+    handleStartRename(e, tabId, currentLabel)
   }
 
   const handleCloseTab = (e: React.MouseEvent, tabId: string) => {
@@ -164,16 +277,31 @@ export function TabContainer() {
     <div className="h-full flex flex-col bg-black">
       {/* Tab Bar */}
       <div className="flex items-center bg-zinc-950 border-b border-zinc-900 min-w-0">
-        <div className="flex items-center gap-0.5 px-1 pt-1 overflow-x-auto flex-1 min-w-0 scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-transparent">
-          {queryTabs.map((tab) => {
+        <div className="flex items-center gap-0.5 px-1 pt-1 overflow-x-auto flex-1 min-w-0 no-scrollbar">
+          {queryTabs.map((tab, index) => {
             const isActive = tab.id === activeTabId
             const isTableTab = tab.tableName !== undefined
             const hasChanges = isTableTab && (tab.editState?.pendingChanges?.length ?? 0) > 0
+            const isDragging = dragState.isDragging && dragState.draggedIndex === index
+            const isDragOver = dragState.isDragging && dragState.overIndex === index
+            const isAnyDragging = dragState.isDragging
+            const isEditing = editingTabId === tab.id
 
             return (
               <div
                 key={tab.id}
-                onClick={() => handleTabClick(tab.id)}
+                ref={(el) => {
+                  if (el) tabRefs.current.set(index, el)
+                  else tabRefs.current.delete(index)
+                }}
+                onMouseDown={(e) => handleMouseDown(e, index)}
+                onClick={() => {
+                  // Only handle click if we weren't dragging
+                  if (!dragState.isDragging && !isEditing) {
+                    handleTabClick(tab.id)
+                  }
+                }}
+                onDoubleClick={(e) => !isTableTab && !dragState.isDragging && handleTabDoubleClick(e, tab.id, tab.connectionId, tab.customName)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') handleTabClick(tab.id)
                 }}
@@ -181,38 +309,75 @@ export function TabContainer() {
                 tabIndex={0}
                 aria-selected={isActive}
                 className={cn(
-                  'group relative flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-t-md border-t border-l border-r transition-colors shrink-0 cursor-pointer select-none',
+                  'group relative flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-t-md border-t border-l border-r transition-all shrink-0 cursor-pointer select-none',
                   isActive
                     ? 'bg-black border-zinc-800 text-zinc-200'
                     : 'bg-zinc-900/50 border-transparent text-zinc-400 hover:text-zinc-300 hover:bg-zinc-900',
+                  isDragging && 'opacity-50 cursor-grabbing',
+                  isDragOver && 'border-l-2 border-l-blue-500 bg-blue-500/10',
+                  !isAnyDragging && !isEditing && 'cursor-grab',
                 )}
               >
-                {isTableTab ? <IconTable className="size-3.5" /> : <Code2 className="size-3.5" />}
-                <span className="max-w-32 truncate">
-                  {isTableTab ? (
-                    <>
-                      {tab.tableName} <span className="text-zinc-500">/all</span>
-                    </>
-                  ) : (
-                    getTabLabel(tab.id, tab.connectionId)
-                  )}
-                </span>
+                {isTableTab ? (
+                  <IconTable className={cn('size-3.5', isAnyDragging && 'pointer-events-none')} />
+                ) : (
+                  <Code2 className={cn('size-3.5', isAnyDragging && 'pointer-events-none')} />
+                )}
+                {isEditing ? (
+                  <input
+                    ref={editInputRef}
+                    type="text"
+                    value={editingName}
+                    onChange={(e) => setEditingName(e.target.value)}
+                    onKeyDown={(e) => handleRenameKeyDown(e, tab.id)}
+                    onBlur={() => handleRenameSubmit(tab.id)}
+                    onClick={(e) => e.stopPropagation()}
+                    className="w-24 bg-zinc-800 border border-zinc-700 rounded px-1 py-0.5 text-xs text-zinc-200 outline-none focus:border-blue-500"
+                  />
+                ) : (
+                  <span className={cn('max-w-32 truncate', isAnyDragging && 'pointer-events-none')}>
+                    {isTableTab ? (
+                      <>
+                        {tab.tableName} <span className="text-zinc-500">/all</span>
+                      </>
+                    ) : (
+                      getTabLabel(tab.id, tab.connectionId, tab.customName)
+                    )}
+                  </span>
+                )}
                 {/* Unsaved changes indicator */}
                 {hasChanges && (
-                  <span className="size-2 rounded-full bg-amber-500" title="Unsaved changes" />
+                  <span className={cn('size-2 rounded-full bg-amber-500', isAnyDragging && 'pointer-events-none')} title="Unsaved changes" />
                 )}
-                <button
-                  type="button"
-                  onClick={(e) => handleCloseTab(e, tab.id)}
-                  className={cn(
-                    'ml-1 p-0.5 rounded-sm transition-opacity',
-                    isActive
-                      ? 'opacity-50 hover:opacity-100 hover:bg-zinc-800'
-                      : 'opacity-0 group-hover:opacity-50 hover:opacity-100! hover:bg-zinc-800',
-                  )}
-                >
-                  <X className="size-3" />
-                </button>
+                {/* Rename button for query tabs */}
+                {!isTableTab && !isEditing && !isAnyDragging && (
+                  <button
+                    type="button"
+                    onClick={(e) => handleStartRename(e, tab.id, getTabLabel(tab.id, tab.connectionId, tab.customName))}
+                    className={cn(
+                      'p-0.5 rounded-sm transition-opacity',
+                      isActive
+                        ? 'opacity-0 group-hover:opacity-50 hover:opacity-100! hover:bg-zinc-800'
+                        : 'opacity-0 group-hover:opacity-50 hover:opacity-100! hover:bg-zinc-800',
+                    )}
+                  >
+                    <Pencil className="size-3" />
+                  </button>
+                )}
+                {!isAnyDragging && (
+                  <button
+                    type="button"
+                    onClick={(e) => handleCloseTab(e, tab.id)}
+                    className={cn(
+                      'ml-1 p-0.5 rounded-sm transition-opacity',
+                      isActive
+                        ? 'opacity-50 hover:opacity-100 hover:bg-zinc-800'
+                        : 'opacity-0 group-hover:opacity-50 hover:opacity-100! hover:bg-zinc-800',
+                    )}
+                  >
+                    <X className="size-3" />
+                  </button>
+                )}
               </div>
             )
           })}
