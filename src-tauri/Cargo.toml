@@ -1,0 +1,54 @@
+[package]
+name = "anko"
+version = "0.1.0"
+description = "A SQL desktop application"
+authors = ["you"]
+license = "MIT"
+repository = ""
+edition = "2021"
+rust-version = "1.77.2"
+
+[lib]
+name = "anko_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+# Tauri
+tauri = { version = "2", features = [] }
+tauri-plugin-log = "2"
+
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+
+# Database
+sqlx = { version = "0.8", features = ["runtime-tokio", "mysql", "postgres", "sqlite", "tls-rustls", "chrono", "uuid", "bigdecimal"] }
+chrono = { version = "0.4", features = ["serde"] }
+bigdecimal = "0.4"
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Utilities
+uuid = { version = "1", features = ["v4", "serde"] }
+thiserror = "2"
+async-trait = "0.1"
+log = "0.4"
+lru = "0.12"
+
+# Encryption
+aes-gcm = "0.10"
+rand = "0.8"
+pbkdf2 = { version = "0.12", features = ["simple"] }
+sha2 = "0.10"
+machine-uid = "0.5"
+
+# App directories
+directories = "6"
+
+[dev-dependencies]
+tempfile = "3.8"
+futures = "0.3"

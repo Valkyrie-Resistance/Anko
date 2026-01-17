@@ -1,0 +1,17 @@
+//! Persistent storage for Anko! 💾✨
+//!
+//! This module handles all local data persistence using SQLite.
+//! Manages saved connections, workspaces, and password encryption~
+//! All passwords are encrypted before storage using AES-256-GCM! 🔐💪
+//!
+//! Key modules:
+//! - `connections`: CRUD operations for saved database connections
+//! - `encryption`: AES-256-GCM password encryption with OS keychain integration
+//! - `workspaces`: Groups of connections for organization
+
+pub mod connections;
+pub mod encryption;
+pub mod workspaces;
+
+pub use connections::*;
+pub use workspaces::*;

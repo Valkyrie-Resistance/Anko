@@ -1,0 +1,105 @@
+services:
+  # MySQL 8 (ARM64 compatible) - E-commerce Database
+  mysql:
+    image: mysql:8.0-oracle
+    platform: linux/arm64
+    container_name: anko-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: testdb
+      MYSQL_USER: anko
+      MYSQL_PASSWORD: anko123
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 5s
+      retries: 10
+
+  # PostgreSQL 16 - Blog Platform Database
+  postgres:
+    image: postgres:16-alpine
+    platform: linux/arm64
+    container_name: anko-postgres
+    environment:
+      POSTGRES_USER: anko
+      POSTGRES_PASSWORD: anko123
+      POSTGRES_DB: testdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U anko -d testdb"]
+      timeout: 5s
+      retries: 10
+
+  # MariaDB 11 (ARM64 compatible) - Inventory Management Database
+  mariadb:
+    image: mariadb:11
+    platform: linux/arm64
+    container_name: anko-mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: testdb
+      MYSQL_USER: anko
+      MYSQL_PASSWORD: anko123
+    ports:
+      - "3307:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+      - ./docker/mariadb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      timeout: 5s
+      retries: 10
+
+  # PostgreSQL 15 (secondary instance) - HR Management Database
+  postgres-15:
+    image: postgres:15-alpine
+    platform: linux/arm64
+    container_name: anko-postgres-15
+    environment:
+      POSTGRES_USER: anko
+      POSTGRES_PASSWORD: anko123
+      POSTGRES_DB: appdb
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres15_data:/var/lib/postgresql/data
+      - ./docker/postgres15:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U anko -d appdb"]
+      timeout: 5s
+      retries: 10
+
+  # MySQL 8.4 LTS - Library Management Database
+  mysql-lts:
+    image: mysql:8.4-oracle
+    platform: linux/arm64
+    container_name: anko-mysql-lts
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: legacydb
+      MYSQL_USER: anko
+      MYSQL_PASSWORD: anko123
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql_lts_data:/var/lib/mysql
+      - ./docker/mysql-lts:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 5s
+      retries: 10
+
+volumes:
+  mysql_data:
+  postgres_data:
+  mariadb_data:
+  postgres15_data:
+  mysql_lts_data:
