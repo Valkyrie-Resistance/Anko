@@ -6,7 +6,7 @@
  */
 import { useEffect } from 'react'
 import { TableTabContent } from '@/components/layout/tabs/TableTabContent'
-import { connect, executeQuery } from '@/lib/tauri'
+import { connect } from '@/lib/tauri'
 import { useConnectionStore } from '@/stores/connection'
 
 // MySQL 8 connection config

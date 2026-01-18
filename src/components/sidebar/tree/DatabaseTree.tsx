@@ -11,7 +11,7 @@ import {
   IconSchema,
   IconTable,
 } from '@tabler/icons-react'
-import { memo, useCallback, useEffect, useReducer, useRef } from 'react'
+import { memo, useCallback, useReducer, useRef } from 'react'
 import { toast } from 'sonner'
 import {
   ContextMenu,
