@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- CHANGELOG_INSERT_MARKER -->
 ## [v0.2.2] - 2026-01-18
 
+### Highlights
+Ever get tired of playing the guessing game with changelog updates? Say no more. We've leveled up the update experience so you can actually *see* what's new before committing to the download.
+
+### New Features ✨
+- **Dynamic Changelog in Update Modal** — Fetch and display changelog entries directly from CHANGELOG.md. No more mysterious version bumps shrouded in mystery. Transparency, baby! 📖
+
+### Under the Hood 🔧
+- Fine-tuned the changelog prompt for smoother operations during testing and deployments.
+
+## [v0.2.2] - 2026-01-18
+
 ### New Features
 
 - **Changelog in Updates**: Update modal now displays changelog from CHANGELOG.md instead of empty release notes
