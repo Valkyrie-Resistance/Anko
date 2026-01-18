@@ -4,10 +4,13 @@ import type {
   ColumnDetail,
   ConnectionConfig,
   ConnectionInfo,
+  CreateSavedQueryInput,
   QueryHistoryEntry,
   QueryResult,
+  SavedQuery,
   SchemaInfo,
   TableInfo,
+  UpdateSavedQueryInput,
   Workspace,
   WorkspaceConfig,
 } from '@/types'
@@ -195,6 +198,23 @@ export async function deleteQueryHistory(id: string): Promise<void> {
 
 export async function clearQueryHistory(): Promise<void> {
   return trackedInvoke<void>('clear_query_history')
+}
+
+// Saved Queries commands
+export async function createSavedQuery(input: CreateSavedQueryInput): Promise<SavedQuery> {
+  return trackedInvoke<SavedQuery>('create_saved_query', { input })
+}
+
+export async function listSavedQueries(workspaceId?: string): Promise<SavedQuery[]> {
+  return trackedInvoke<SavedQuery[]>('list_saved_queries', { workspaceId })
+}
+
+export async function updateSavedQuery(id: string, input: UpdateSavedQueryInput): Promise<SavedQuery> {
+  return trackedInvoke<SavedQuery>('update_saved_query', { id, input })
+}
+
+export async function deleteSavedQuery(id: string): Promise<void> {
+  return trackedInvoke<void>('delete_saved_query', { id })
 }
 
 // Dev tools commands

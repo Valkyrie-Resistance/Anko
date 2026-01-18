@@ -5,7 +5,10 @@ use crate::db::connector::DatabaseDriver;
 use crate::db::ConnectionConfig;
 use crate::error::AppError;
 use crate::state::AppState;
-use crate::storage::{AddQueryHistoryInput, QueryHistoryEntry, Workspace, WorkspaceConfig};
+use crate::storage::{
+    AddQueryHistoryInput, CreateSavedQueryInput, QueryHistoryEntry, SavedQuery,
+    UpdateSavedQueryInput, Workspace, WorkspaceConfig,
+};
 
 /// A connection without the password for frontend display
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -272,6 +275,61 @@ pub async fn clear_query_history(state: State<'_, AppState>) -> Result<(), AppEr
     storage.query_history.clear_all().await
 }
 
+// ==================== Saved Queries Commands ====================
+
+#[tauri::command]
+pub async fn create_saved_query(
+    state: State<'_, AppState>,
+    input: CreateSavedQueryInput,
+) -> Result<SavedQuery, AppError> {
+    let storage = state
+        .storage
+        .get()
+        .ok_or_else(|| AppError::Storage("Storage not initialized".to_string()))?;
+
+    storage.saved_queries.create(&input).await
+}
+
+#[tauri::command]
+pub async fn list_saved_queries(
+    state: State<'_, AppState>,
+    workspace_id: Option<String>,
+) -> Result<Vec<SavedQuery>, AppError> {
+    let storage = state
+        .storage
+        .get()
+        .ok_or_else(|| AppError::Storage("Storage not initialized".to_string()))?;
+
+    storage.saved_queries.list(workspace_id.as_deref()).await
+}
+
+#[tauri::command]
+pub async fn update_saved_query(
+    state: State<'_, AppState>,
+    id: String,
+    input: UpdateSavedQueryInput,
+) -> Result<SavedQuery, AppError> {
+    let storage = state
+        .storage
+        .get()
+        .ok_or_else(|| AppError::Storage("Storage not initialized".to_string()))?;
+
+    storage.saved_queries.update(&id, &input).await
+}
+
+#[tauri::command]
+pub async fn delete_saved_query(
+    state: State<'_, AppState>,
+    id: String,
+) -> Result<(), AppError> {
+    let storage = state
+        .storage
+        .get()
+        .ok_or_else(|| AppError::Storage("Storage not initialized".to_string()))?;
+
+    storage.saved_queries.delete(&id).await
+}
+
 // ==================== Dev Tools Commands ====================
 
 #[tauri::command]
@@ -281,7 +339,9 @@ pub async fn clear_all_data(state: State<'_, AppState>) -> Result<(), AppError> 
         .get()
         .ok_or_else(|| AppError::Storage("Storage not initialized".to_string()))?;
 
-    // Clear all workspaces first (due to foreign key constraints)
+    // Clear saved queries first (due to foreign key constraints)
+    storage.saved_queries.clear_all().await?;
+    // Clear all workspaces
     storage.workspaces.clear_all().await?;
     // Clear all connections
     storage.connections.clear_all().await?;

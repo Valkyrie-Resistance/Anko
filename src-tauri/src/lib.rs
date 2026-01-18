@@ -65,6 +65,11 @@ pub fn run() {
             commands::list_query_history,
             commands::delete_query_history,
             commands::clear_query_history,
+            // Storage commands - Saved Queries
+            commands::create_saved_query,
+            commands::list_saved_queries,
+            commands::update_saved_query,
+            commands::delete_saved_query,
             // Dev tools commands
             commands::clear_all_data,
         ])

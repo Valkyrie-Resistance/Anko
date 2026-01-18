@@ -28,11 +28,14 @@ import {
 } from '@/components/ui/select'
 import {
   clearQueryHistory,
+  createSavedQuery,
   deleteQueryHistory,
   listQueryHistory,
 } from '@/lib/tauri'
 import { useConnectionStore } from '@/stores/connection'
 import { useQueryHistoryStore } from '@/stores/query-history'
+import { useSavedQueriesStore } from '@/stores/saved-queries'
+import { useWorkspaceStore } from '@/stores/workspace'
 import type { QueryHistoryEntry } from '@/types'
 
 export function HistoryPanel() {
@@ -51,6 +54,9 @@ export function HistoryPanel() {
   const savedConnections = useConnectionStore((s) => s.savedConnections)
   const addQueryTab = useConnectionStore((s) => s.addQueryTab)
   const activeConnections = useConnectionStore((s) => s.activeConnections)
+
+  const addSavedQuery = useSavedQueriesStore((s) => s.addQuery)
+  const activeWorkspaceId = useWorkspaceStore((s) => s.activeWorkspaceId)
 
   // Load history on mount
   useEffect(() => {
@@ -141,6 +147,34 @@ export function HistoryPanel() {
     [activeConnections, addQueryTab],
   )
 
+  // Handle save to queries
+  const handleSaveToQueries = useCallback(
+    async (entry: QueryHistoryEntry) => {
+      try {
+        // Generate a name from the query (first 30 chars or first line)
+        const queryLine = entry.query.trim().split('\n')[0]
+        const name = queryLine.length > 30 ? `${queryLine.slice(0, 30)}...` : queryLine
+
+        const saved = await createSavedQuery({
+          name,
+          query: entry.query,
+          description: null,
+          workspaceId: activeWorkspaceId !== 'default' ? activeWorkspaceId : null,
+          connectionId: entry.connectionId,
+          databaseName: entry.databaseName,
+        })
+        addSavedQuery(saved)
+        toast.success('Query saved', {
+          description: 'You can find it in the Saved Queries panel',
+        })
+      } catch (e) {
+        console.error('Failed to save query:', e)
+        toast.error('Failed to save query')
+      }
+    },
+    [activeWorkspaceId, addSavedQuery],
+  )
+
   return (
     <div className="flex flex-col h-full min-h-0">
       {/* Header */}
@@ -201,6 +235,7 @@ export function HistoryPanel() {
                 onDelete={() => handleDelete(entry.id)}
                 onCopy={() => handleCopy(entry.query)}
                 onOpenInEditor={() => handleOpenInEditor(entry)}
+                onSaveToQueries={() => handleSaveToQueries(entry)}
               />
             ))
           )}
@@ -215,9 +250,10 @@ interface HistoryEntryProps {
   onDelete: () => void
   onCopy: () => void
   onOpenInEditor: () => void
+  onSaveToQueries: () => void
 }
 
-function HistoryEntry({ entry, onDelete, onCopy, onOpenInEditor }: HistoryEntryProps) {
+function HistoryEntry({ entry, onDelete, onCopy, onOpenInEditor, onSaveToQueries }: HistoryEntryProps) {
   // Format timestamp
   const formattedTime = useMemo(() => {
     const date = new Date(entry.executedAt)
@@ -288,7 +324,7 @@ function HistoryEntry({ entry, onDelete, onCopy, onOpenInEditor }: HistoryEntryP
           <IconFileCode className="size-4 mr-2" />
           Open in Editor
         </ContextMenuItem>
-        <ContextMenuItem disabled>
+        <ContextMenuItem onClick={onSaveToQueries}>
           <IconDeviceFloppy className="size-4 mr-2" />
           Save to Queries
         </ContextMenuItem>
