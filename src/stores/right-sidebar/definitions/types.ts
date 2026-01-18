@@ -14,8 +14,10 @@ export type RightSidebarContext =
 
 export interface RightSidebarStore {
   open: boolean
+  width: number
   context: RightSidebarContext
   setOpen: (open: boolean) => void
+  setWidth: (width: number) => void
   toggle: () => void
   setContext: (context: RightSidebarContext) => void
   clearContext: () => void

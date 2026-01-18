@@ -2,11 +2,18 @@ import { create } from 'zustand'
 import { storeLogger } from '@/lib/debug'
 import type { RightSidebarStore } from './definitions/types'
 
+const DEFAULT_WIDTH = 280
+const MIN_WIDTH = 200
+const MAX_WIDTH = 500
+
 export const useRightSidebarStore = create<RightSidebarStore>((set) => ({
   open: false,
+  width: DEFAULT_WIDTH,
   context: { type: 'none' },
 
   setOpen: (open) => set({ open }),
+
+  setWidth: (width) => set({ width: Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, width)) }),
 
   toggle: () => set((state) => ({ open: !state.open })),
 
