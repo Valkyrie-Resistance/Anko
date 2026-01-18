@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 <!-- CHANGELOG_INSERT_MARKER -->
+## [v0.1.1] - 2026-01-18
+
+### Highlights
+This patch release resolves critical TypeScript compilation errors to ensure stable production builds.
+
+### Bug Fixes
+- Fix TypeScript errors in production build
+
 ## [v0.1.0] - 2026-01-18
 
 ### Highlights
