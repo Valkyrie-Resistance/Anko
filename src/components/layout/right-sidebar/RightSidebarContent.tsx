@@ -1,7 +1,8 @@
 import { IconBraces, IconDatabase, IconTable } from '@tabler/icons-react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { useRightSidebarStore } from '@/stores/right-sidebar'
+import type { TableInfo } from '@/stores/right-sidebar/definitions/types'
 import { CellDetails } from './CellDetails'
 import { RowDetails } from './RowDetails'
 import { TableSchemaView } from './TableSchemaView'
@@ -11,10 +12,27 @@ type TabId = 'data' | 'table' | 'utilities'
 
 export function RightSidebarContextContent() {
   const context = useRightSidebarStore((s) => s.context)
+  const currentTableInfo = useRightSidebarStore((s) => s.currentTableInfo)
   const [activeTab, setActiveTab] = useState<TabId>('data')
 
-  // Determine what tabs to show based on context
-  const hasTableContent = context.type === 'table'
+  // Get table info from context or current table info
+  const tableInfo: TableInfo | null = useMemo(() => {
+    if (context.type === 'table') {
+      return {
+        tableName: context.tableName,
+        columns: context.columns,
+        database: context.database,
+        schema: context.schema,
+      }
+    }
+    if (context.type === 'row' || context.type === 'cell') {
+      return context.tableInfo
+    }
+    return currentTableInfo
+  }, [context, currentTableInfo])
+
+  // Table and Utils tabs are available if we have table info
+  const hasTableContent = tableInfo !== null && tableInfo.tableName !== ''
 
   // If no context, show empty state
   if (context.type === 'none') {
@@ -66,16 +84,16 @@ export function RightSidebarContextContent() {
       {/* Tab Content */}
       <div className="flex-1 overflow-hidden">
         {activeTab === 'data' && <DataTabContent />}
-        {activeTab === 'table' && hasTableContent && (
+        {activeTab === 'table' && hasTableContent && tableInfo && (
           <TableSchemaView
-            tableName={context.tableName}
-            columns={context.columns}
-            database={context.database}
-            schema={context.schema}
+            tableName={tableInfo.tableName}
+            columns={tableInfo.columns}
+            database={tableInfo.database}
+            schema={tableInfo.schema}
           />
         )}
-        {activeTab === 'utilities' && hasTableContent && (
-          <ZodGeneratorView tableName={context.tableName} columns={context.columns} />
+        {activeTab === 'utilities' && hasTableContent && tableInfo && (
+          <ZodGeneratorView tableName={tableInfo.tableName} columns={tableInfo.columns} />
         )}
       </div>
     </div>

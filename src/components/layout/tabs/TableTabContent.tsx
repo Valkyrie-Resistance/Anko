@@ -157,6 +157,13 @@ export function TableTabContent({ tabId }: TableTabContentProps) {
   const runtimeConnectionId = connection?.connectionId
   const driver = connection?.info.driver
 
+  // Track if this tab is active
+  const activeTabId = useConnectionStore((s) => s.activeTabId)
+  const isActiveTab = activeTabId === tabId
+
+  // Store column details in a ref for reuse when switching tabs
+  const columnsRef = useRef<Awaited<ReturnType<typeof getColumns>> | null>(null)
+
   // Fetch column details to get primary key information
   // Only re-run when the table identity changes, not on every tab object update
   useEffect(() => {
@@ -166,6 +173,7 @@ export function TableTabContent({ tabId }: TableTabContentProps) {
       try {
         const schema = schemaName || databaseName
         const cols = await getColumns(runtimeConnectionId, databaseName, schema, tableName)
+        columnsRef.current = cols
 
         // Extract primary key columns
         const pkCols = cols.filter((c) => c.key === 'PRI').map((c) => c.name)
@@ -180,6 +188,13 @@ export function TableTabContent({ tabId }: TableTabContentProps) {
 
     fetchColumnDetails()
   }, [runtimeConnectionId, tableName, databaseName, schemaName, tabId])
+
+  // Update sidebar context when this tab becomes active
+  useEffect(() => {
+    if (isActiveTab && columnsRef.current && tableName && databaseName) {
+      showTableDetailsRef.current(tableName, columnsRef.current, databaseName, schemaName)
+    }
+  }, [isActiveTab, tableName, databaseName, schemaName])
 
   // Load data for the current page
   const loadPage = useCallback(
