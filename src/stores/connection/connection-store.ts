@@ -37,7 +37,10 @@ export const useConnectionStore = create<ConnectionStore>()(
       activeConnections: [],
       addActiveConnection: (connection) =>
         set((draft) => {
-          storeLogger.debug('addActiveConnection', { connectionId: connection.connectionId, name: connection.info.name })
+          storeLogger.debug('addActiveConnection', {
+            connectionId: connection.connectionId,
+            name: connection.info.name,
+          })
           draft.activeConnections.push(connection)
           // Initialize empty schema cache for the connection
           draft.schemaCache[connection.connectionId] = {
@@ -222,7 +225,11 @@ export const useConnectionStore = create<ConnectionStore>()(
         set((draft) => {
           const tab = draft.queryTabs.find((t) => t.id === tabId)
           if (tab) {
-            storeLogger.debug('setQueryResult', { tabId, rowCount: result.rows.length, columnCount: result.columns.length })
+            storeLogger.debug('setQueryResult', {
+              tabId,
+              rowCount: result.rows.length,
+              columnCount: result.columns.length,
+            })
             tab.result = result
             tab.error = undefined
             tab.isExecuting = false

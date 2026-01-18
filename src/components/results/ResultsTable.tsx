@@ -5,7 +5,11 @@ import { DebugPanel } from './DebugPanel'
 import type { ResultsTableProps } from './definitions'
 import { KeyboardShortcutsHelp } from './KeyboardShortcutsHelp'
 
-export const ResultsTable = memo(function ResultsTable({ result, error, isExecuting }: ResultsTableProps) {
+export const ResultsTable = memo(function ResultsTable({
+  result,
+  error,
+  isExecuting,
+}: ResultsTableProps) {
   if (isExecuting) {
     return (
       <div className="flex items-center justify-center h-full bg-black text-zinc-500">

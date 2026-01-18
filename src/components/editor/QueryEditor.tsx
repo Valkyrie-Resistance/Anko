@@ -63,11 +63,11 @@ export function QueryEditor({ tabId }: QueryEditorProps) {
   const tab = useMemo(() => queryTabs.find((t) => t.id === tabId), [queryTabs, tabId])
   const connection = useMemo(
     () => activeConnections.find((c) => c.id === tab?.connectionId),
-    [activeConnections, tab?.connectionId]
+    [activeConnections, tab?.connectionId],
   )
   const workspace = useMemo(
     () => workspaces.find((w) => w.id === activeWorkspaceId),
-    [workspaces, activeWorkspaceId]
+    [workspaces, activeWorkspaceId],
   )
 
   const connectionId = connection?.connectionId
@@ -98,7 +98,10 @@ export function QueryEditor({ tabId }: QueryEditorProps) {
       schemaCacheForConnection?.databases && schemaCacheForConnection.databases.length > 0
 
     if (hasDatabases) {
-      editorLogger.debug('databases cache hit', { connectionId, count: schemaCacheForConnection.databases.length })
+      editorLogger.debug('databases cache hit', {
+        connectionId,
+        count: schemaCacheForConnection.databases.length,
+      })
       return
     }
 
@@ -152,7 +155,12 @@ export function QueryEditor({ tabId }: QueryEditorProps) {
     const query = queryRef.current
     if (!query?.trim() || !connectionId || !connectionInfoId) return
 
-    editorLogger.debug('executing query', { tabId, connectionId, database: selectedDatabase, queryLength: query.length })
+    editorLogger.debug('executing query', {
+      tabId,
+      connectionId,
+      database: selectedDatabase,
+      queryLength: query.length,
+    })
     const timer = createTimer(editorLogger, 'query execution')
     const startTime = performance.now()
     setQueryExecutingRef.current(tabId, true)
@@ -174,11 +182,13 @@ export function QueryEditor({ tabId }: QueryEditorProps) {
         rowCount,
         success: true,
         errorMessage: null,
-      }).then((entry) => {
-        addHistoryEntryRef.current(entry)
-      }).catch((e) => {
-        editorLogger.warn('Failed to log query to history', e)
       })
+        .then((entry) => {
+          addHistoryEntryRef.current(entry)
+        })
+        .catch((e) => {
+          editorLogger.warn('Failed to log query to history', e)
+        })
 
       toast.success('Query executed', {
         description: `${rowCount} row${rowCount !== 1 ? 's' : ''} returned`,
@@ -199,11 +209,13 @@ export function QueryEditor({ tabId }: QueryEditorProps) {
         rowCount: null,
         success: false,
         errorMessage,
-      }).then((entry) => {
-        addHistoryEntryRef.current(entry)
-      }).catch((err) => {
-        editorLogger.warn('Failed to log query to history', err)
       })
+        .then((entry) => {
+          addHistoryEntryRef.current(entry)
+        })
+        .catch((err) => {
+          editorLogger.warn('Failed to log query to history', err)
+        })
 
       toast.error('Query failed', {
         description: errorMessage,
@@ -253,7 +265,14 @@ export function QueryEditor({ tabId }: QueryEditorProps) {
       editorLogger.warn('Failed to save query', e)
       toast.error('Failed to save query')
     }
-  }, [saveQueryName, saveQueryDescription, activeWorkspaceId, connectionInfoId, selectedDatabase, addSavedQuery])
+  }, [
+    saveQueryName,
+    saveQueryDescription,
+    activeWorkspaceId,
+    connectionInfoId,
+    selectedDatabase,
+    addSavedQuery,
+  ])
 
   if (!tab || !connection) return null
 
@@ -424,9 +443,7 @@ export function QueryEditor({ tabId }: QueryEditorProps) {
           >
             <DialogHeader>
               <DialogTitle>Save Query</DialogTitle>
-              <DialogDescription>
-                Save this query for quick access later.
-              </DialogDescription>
+              <DialogDescription>Save this query for quick access later.</DialogDescription>
             </DialogHeader>
 
             <div className="grid gap-4 py-4">
@@ -453,11 +470,7 @@ export function QueryEditor({ tabId }: QueryEditorProps) {
             </div>
 
             <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setSaveDialogOpen(false)}
-              >
+              <Button type="button" variant="outline" onClick={() => setSaveDialogOpen(false)}>
                 Cancel
               </Button>
               <Button type="submit" disabled={!saveQueryName.trim()}>

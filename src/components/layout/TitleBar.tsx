@@ -27,10 +27,11 @@ export function TitleBar({ onToggleLeftSidebar, onToggleRightSidebar }: TitleBar
       <div data-tauri-drag-region className="flex items-center h-full pl-20 w-20" />
 
       {/* Center section - App name with status */}
-      <div data-tauri-drag-region className="flex-1 flex items-center justify-center h-full gap-2 pointer-events-none">
-        <span className="text-xs text-muted-foreground">
-          Anko
-        </span>
+      <div
+        data-tauri-drag-region
+        className="flex-1 flex items-center justify-center h-full gap-2 pointer-events-none"
+      >
+        <span className="text-xs text-muted-foreground">Anko</span>
         <Badge
           variant="outline"
           className="text-[10px] px-1.5 py-0 h-4 font-normal text-muted-foreground"

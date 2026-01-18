@@ -1,5 +1,5 @@
-import { check, type Update } from '@tauri-apps/plugin-updater'
 import { relaunch } from '@tauri-apps/plugin-process'
+import { check, type Update } from '@tauri-apps/plugin-updater'
 
 const SKIPPED_VERSIONS_KEY = 'anko-skipped-versions'
 const REMIND_LATER_KEY = 'anko-remind-later'

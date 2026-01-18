@@ -126,31 +126,34 @@ export function TabContainer() {
     })
   }
 
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (dragState.draggedIndex === null) return
+  const handleMouseMove = useCallback(
+    (e: MouseEvent) => {
+      if (dragState.draggedIndex === null) return
 
-    // Start dragging after moving 5px (to differentiate from click)
-    if (!dragState.isDragging && Math.abs(e.clientX - dragState.startX) > 5) {
-      setDragState((prev) => ({ ...prev, isDragging: true }))
-    }
-
-    if (!dragState.isDragging) return
-
-    // Find which tab we're over
-    let overIndex: number | null = null
-    tabRefs.current.forEach((element, idx) => {
-      if (element && idx !== dragState.draggedIndex) {
-        const rect = element.getBoundingClientRect()
-        if (e.clientX >= rect.left && e.clientX <= rect.right) {
-          overIndex = idx
-        }
+      // Start dragging after moving 5px (to differentiate from click)
+      if (!dragState.isDragging && Math.abs(e.clientX - dragState.startX) > 5) {
+        setDragState((prev) => ({ ...prev, isDragging: true }))
       }
-    })
 
-    if (overIndex !== dragState.overIndex) {
-      setDragState((prev) => ({ ...prev, overIndex }))
-    }
-  }, [dragState.draggedIndex, dragState.isDragging, dragState.startX, dragState.overIndex])
+      if (!dragState.isDragging) return
+
+      // Find which tab we're over
+      let overIndex: number | null = null
+      tabRefs.current.forEach((element, idx) => {
+        if (element && idx !== dragState.draggedIndex) {
+          const rect = element.getBoundingClientRect()
+          if (e.clientX >= rect.left && e.clientX <= rect.right) {
+            overIndex = idx
+          }
+        }
+      })
+
+      if (overIndex !== dragState.overIndex) {
+        setDragState((prev) => ({ ...prev, overIndex }))
+      }
+    },
+    [dragState.draggedIndex, dragState.isDragging, dragState.startX, dragState.overIndex],
+  )
 
   const handleMouseUp = useCallback(() => {
     if (dragState.isDragging && dragState.draggedIndex !== null && dragState.overIndex !== null) {
@@ -203,7 +206,12 @@ export function TabContainer() {
     }
   }
 
-  const handleTabDoubleClick = (e: React.MouseEvent, tabId: string, connectionId: string, customName?: string) => {
+  const handleTabDoubleClick = (
+    e: React.MouseEvent,
+    tabId: string,
+    connectionId: string,
+    customName?: string,
+  ) => {
     e.stopPropagation()
     const currentLabel = getTabLabel(tabId, connectionId, customName)
     handleStartRename(e, tabId, currentLabel)
@@ -215,7 +223,10 @@ export function TabContainer() {
     // Check for unsaved changes
     const tabWithChanges = getTabWithChanges(tabId)
     if (tabWithChanges) {
-      tabLogger.debug('tab close blocked - unsaved changes', { tabId, changesCount: tabWithChanges.changesCount })
+      tabLogger.debug('tab close blocked - unsaved changes', {
+        tabId,
+        changesCount: tabWithChanges.changesCount,
+      })
       setPendingAction({ type: 'close', tabId })
       setShowUnsavedDialog(true)
       return
@@ -232,7 +243,10 @@ export function TabContainer() {
     if (activeTabId) {
       const tabWithChanges = getTabWithChanges(activeTabId)
       if (tabWithChanges) {
-        tabLogger.debug('tab switch blocked - unsaved changes', { fromTabId: activeTabId, toTabId: tabId })
+        tabLogger.debug('tab switch blocked - unsaved changes', {
+          fromTabId: activeTabId,
+          toTabId: tabId,
+        })
         setPendingAction({ type: 'switch', tabId: activeTabId, targetTabId: tabId })
         setShowUnsavedDialog(true)
         return
@@ -301,7 +315,11 @@ export function TabContainer() {
                     handleTabClick(tab.id)
                   }
                 }}
-                onDoubleClick={(e) => !isTableTab && !dragState.isDragging && handleTabDoubleClick(e, tab.id, tab.connectionId, tab.customName)}
+                onDoubleClick={(e) =>
+                  !isTableTab &&
+                  !dragState.isDragging &&
+                  handleTabDoubleClick(e, tab.id, tab.connectionId, tab.customName)
+                }
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') handleTabClick(tab.id)
                 }}
@@ -347,13 +365,25 @@ export function TabContainer() {
                 )}
                 {/* Unsaved changes indicator */}
                 {hasChanges && (
-                  <span className={cn('size-2 rounded-full bg-amber-500', isAnyDragging && 'pointer-events-none')} title="Unsaved changes" />
+                  <span
+                    className={cn(
+                      'size-2 rounded-full bg-amber-500',
+                      isAnyDragging && 'pointer-events-none',
+                    )}
+                    title="Unsaved changes"
+                  />
                 )}
                 {/* Rename button for query tabs */}
                 {!isTableTab && !isEditing && !isAnyDragging && (
                   <button
                     type="button"
-                    onClick={(e) => handleStartRename(e, tab.id, getTabLabel(tab.id, tab.connectionId, tab.customName))}
+                    onClick={(e) =>
+                      handleStartRename(
+                        e,
+                        tab.id,
+                        getTabLabel(tab.id, tab.connectionId, tab.customName),
+                      )
+                    }
                     className={cn(
                       'p-0.5 rounded-sm transition-opacity',
                       isActive

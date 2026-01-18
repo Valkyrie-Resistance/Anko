@@ -6,7 +6,10 @@ interface DebugPanelProps {
   executedQuery?: string
 }
 
-export const DebugPanel = memo(function DebugPanel({ originalQuery, executedQuery }: DebugPanelProps) {
+export const DebugPanel = memo(function DebugPanel({
+  originalQuery,
+  executedQuery,
+}: DebugPanelProps) {
   const [isExpanded, setIsExpanded] = useState(false)
 
   if (!originalQuery && !executedQuery) return null

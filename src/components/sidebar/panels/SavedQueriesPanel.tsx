@@ -8,6 +8,7 @@ import {
 } from '@tabler/icons-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
+import { Button } from '@/components/ui/button'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -27,13 +28,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Textarea } from '@/components/ui/textarea'
-import { Button } from '@/components/ui/button'
-import {
-  createSavedQuery,
-  deleteSavedQuery,
-  listSavedQueries,
-  updateSavedQuery,
-} from '@/lib/tauri'
+import { createSavedQuery, deleteSavedQuery, listSavedQueries, updateSavedQuery } from '@/lib/tauri'
 import { useConnectionStore } from '@/stores/connection'
 import { useSavedQueriesStore } from '@/stores/saved-queries'
 import { useWorkspaceStore } from '@/stores/workspace'
@@ -166,11 +161,7 @@ export function SavedQueriesPanel() {
   }
 
   // Handle save query
-  const handleSaveQuery = async (
-    name: string,
-    query: string,
-    description: string,
-  ) => {
+  const handleSaveQuery = async (name: string, query: string, description: string) => {
     try {
       if (editingQuery) {
         // Update existing
@@ -279,8 +270,11 @@ function SavedQueryItem({ query, onDelete, onCopy, onOpenInEditor, onEdit }: Sav
     <ContextMenu>
       <ContextMenuTrigger>
         <div
+          role="button"
+          tabIndex={0}
           className="group px-2 py-1.5 rounded-md hover:bg-accent/50 cursor-pointer select-none"
           onDoubleClick={onOpenInEditor}
+          onKeyDown={(e) => e.key === 'Enter' && onOpenInEditor()}
         >
           {/* Name */}
           <div className="flex items-center gap-1.5 text-xs font-medium text-foreground">
@@ -405,11 +399,7 @@ function SaveQueryDialog({ open, onOpenChange, editQuery, onSave }: SaveQueryDia
           </div>
 
           <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button type="submit" disabled={!name.trim() || !query.trim()}>

@@ -3,8 +3,8 @@ import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { generateZodSchema } from '@/lib/zod-generator'
 import { cn } from '@/lib/utils'
+import { generateZodSchema } from '@/lib/zod-generator'
 import type { ColumnDetail } from '@/types'
 
 interface TableDetailsProps {
