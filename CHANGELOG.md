@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 <!-- CHANGELOG_INSERT_MARKER -->
+## [v0.2.0] - 2026-01-18
+
+### Highlights
+Major redesign of the right sidebar with persistent context and new query management features. Anko now saves your query history and lets you organize frequently-used queries in your workspace.
+
+### New Features
+- **Right Sidebar Redesign**: View table details, row information, and Zod schema in organized tabs with resizable panels
+- **Saved Queries**: Save and organize your frequently-used queries within your workspace
+- **Query History**: Automatic 30-day query history retention for easy access to past queries
+- **Workspace Management**: Add context menu with edit and delete options for your saved queries and workspaces
+- **Persistent Context**: Table selections now persist when navigating between rows and cells
+
+### Bug Fixes
+- Fix MySQL type handling for TIMESTAMP, DECIMAL, and JSON columns
+- Fix row details duplication and implement proper custom tabs layout
+- Fix nested button error and simplify tabs layout
+- Fix 'Open in Editor' functionality and add Save Query button
+- Hide Developer Tools in production builds
+- Disable right-click and reload actions in production
+
 ## [v0.1.2] - 2026-01-18
 
 ### Highlights
