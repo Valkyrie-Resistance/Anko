@@ -1,15 +1,17 @@
 import { IconBraces, IconDatabase, IconTable } from '@tabler/icons-react'
 import { useState } from 'react'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { cn } from '@/lib/utils'
 import { useRightSidebarStore } from '@/stores/right-sidebar'
 import { CellDetails } from './CellDetails'
 import { RowDetails } from './RowDetails'
 import { TableSchemaView } from './TableSchemaView'
 import { ZodGeneratorView } from './ZodGeneratorView'
 
+type TabId = 'data' | 'table' | 'utilities'
+
 export function RightSidebarContextContent() {
   const context = useRightSidebarStore((s) => s.context)
-  const [activeTab, setActiveTab] = useState('data')
+  const [activeTab, setActiveTab] = useState<TabId>('data')
 
   // Determine what tabs to show based on context
   const hasTableContent = context.type === 'table'
@@ -32,48 +34,77 @@ export function RightSidebarContextContent() {
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
-        <div className="border-b px-2 pt-2 pb-2">
-          <TabsList className="w-full">
-            <TabsTrigger value="data" className="flex-1 text-xs gap-1">
-              <IconDatabase className="size-3.5" />
-              Data
-            </TabsTrigger>
-            <TabsTrigger value="table" className="flex-1 text-xs gap-1" disabled={!hasTableContent}>
-              <IconTable className="size-3.5" />
-              Table
-            </TabsTrigger>
-            <TabsTrigger value="utilities" className="flex-1 text-xs gap-1" disabled={!hasTableContent}>
-              <IconBraces className="size-3.5" />
-              Utils
-            </TabsTrigger>
-          </TabsList>
+      {/* Custom Tab List */}
+      <div className="border-b px-2 pt-2 pb-2">
+        <div className="flex items-center bg-muted rounded-lg p-[3px]">
+          <TabButton
+            active={activeTab === 'data'}
+            onClick={() => setActiveTab('data')}
+          >
+            <IconDatabase className="size-3.5" />
+            Data
+          </TabButton>
+          <TabButton
+            active={activeTab === 'table'}
+            onClick={() => setActiveTab('table')}
+            disabled={!hasTableContent}
+          >
+            <IconTable className="size-3.5" />
+            Table
+          </TabButton>
+          <TabButton
+            active={activeTab === 'utilities'}
+            onClick={() => setActiveTab('utilities')}
+            disabled={!hasTableContent}
+          >
+            <IconBraces className="size-3.5" />
+            Utils
+          </TabButton>
         </div>
+      </div>
 
-        <div className="flex-1 overflow-hidden">
-          <TabsContent value="data" className="h-full m-0 data-[state=inactive]:hidden">
-            <DataTabContent />
-          </TabsContent>
-
-          <TabsContent value="table" className="h-full m-0 data-[state=inactive]:hidden">
-            {hasTableContent && (
-              <TableSchemaView
-                tableName={context.tableName}
-                columns={context.columns}
-                database={context.database}
-                schema={context.schema}
-              />
-            )}
-          </TabsContent>
-
-          <TabsContent value="utilities" className="h-full m-0 data-[state=inactive]:hidden">
-            {hasTableContent && (
-              <ZodGeneratorView tableName={context.tableName} columns={context.columns} />
-            )}
-          </TabsContent>
-        </div>
-      </Tabs>
+      {/* Tab Content */}
+      <div className="flex-1 overflow-hidden">
+        {activeTab === 'data' && <DataTabContent />}
+        {activeTab === 'table' && hasTableContent && (
+          <TableSchemaView
+            tableName={context.tableName}
+            columns={context.columns}
+            database={context.database}
+            schema={context.schema}
+          />
+        )}
+        {activeTab === 'utilities' && hasTableContent && (
+          <ZodGeneratorView tableName={context.tableName} columns={context.columns} />
+        )}
+      </div>
     </div>
+  )
+}
+
+interface TabButtonProps {
+  active: boolean
+  onClick: () => void
+  disabled?: boolean
+  children: React.ReactNode
+}
+
+function TabButton({ active, onClick, disabled, children }: TabButtonProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={cn(
+        'flex-1 flex items-center justify-center gap-1 px-2 py-1 text-xs font-medium rounded-md transition-colors',
+        active
+          ? 'bg-background text-foreground'
+          : 'text-muted-foreground hover:text-foreground',
+        disabled && 'opacity-50 cursor-not-allowed',
+      )}
+    >
+      {children}
+    </button>
   )
 }
 
