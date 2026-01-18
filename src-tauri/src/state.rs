@@ -8,11 +8,12 @@ use crate::db::mysql::MySqlConnector;
 use crate::db::postgres::PostgresConnector;
 use crate::db::ConnectionConfig;
 use crate::error::AppError;
-use crate::storage::{ConnectionStorage, WorkspaceStorage};
+use crate::storage::{ConnectionStorage, QueryHistoryStorage, WorkspaceStorage};
 
 pub struct Storage {
     pub connections: ConnectionStorage,
     pub workspaces: WorkspaceStorage,
+    pub query_history: QueryHistoryStorage,
 }
 
 pub struct AppState {
@@ -31,11 +32,14 @@ impl AppState {
     pub async fn initialize_storage(&self, app_data_dir: &std::path::Path) -> Result<(), AppError> {
         let conn_storage = ConnectionStorage::new(app_data_dir).await?;
         let pool = conn_storage.get_pool();
-        let workspace_storage = WorkspaceStorage::new(pool);
+        let workspace_storage = WorkspaceStorage::new(pool.clone());
         workspace_storage.initialize_schema().await?;
+        let query_history_storage = QueryHistoryStorage::new(pool);
+        query_history_storage.initialize_schema().await?;
         let storage = Storage {
             connections: conn_storage,
             workspaces: workspace_storage,
+            query_history: query_history_storage,
         };
         self.storage.set(storage).map_err(|_| AppError::Storage("Storage already initialized".to_string()))?;
         Ok(())

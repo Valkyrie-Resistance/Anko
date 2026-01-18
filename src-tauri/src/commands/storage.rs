@@ -5,7 +5,7 @@ use crate::db::connector::DatabaseDriver;
 use crate::db::ConnectionConfig;
 use crate::error::AppError;
 use crate::state::AppState;
-use crate::storage::{Workspace, WorkspaceConfig};
+use crate::storage::{AddQueryHistoryInput, QueryHistoryEntry, Workspace, WorkspaceConfig};
 
 /// A connection without the password for frontend display
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -217,6 +217,61 @@ pub async fn move_connection_between_workspaces(
     storage.workspaces.move_connection(&connection_id, &from_workspace_id, &to_workspace_id).await
 }
 
+// ==================== Query History Commands ====================
+
+#[tauri::command]
+pub async fn add_query_history(
+    state: State<'_, AppState>,
+    input: AddQueryHistoryInput,
+) -> Result<QueryHistoryEntry, AppError> {
+    let storage = state
+        .storage
+        .get()
+        .ok_or_else(|| AppError::Storage("Storage not initialized".to_string()))?;
+
+    storage.query_history.add(&input).await
+}
+
+#[tauri::command]
+pub async fn list_query_history(
+    state: State<'_, AppState>,
+    connection_id: Option<String>,
+    limit: Option<i64>,
+) -> Result<Vec<QueryHistoryEntry>, AppError> {
+    let storage = state
+        .storage
+        .get()
+        .ok_or_else(|| AppError::Storage("Storage not initialized".to_string()))?;
+
+    storage
+        .query_history
+        .list(connection_id.as_deref(), limit)
+        .await
+}
+
+#[tauri::command]
+pub async fn delete_query_history(
+    state: State<'_, AppState>,
+    id: String,
+) -> Result<(), AppError> {
+    let storage = state
+        .storage
+        .get()
+        .ok_or_else(|| AppError::Storage("Storage not initialized".to_string()))?;
+
+    storage.query_history.delete(&id).await
+}
+
+#[tauri::command]
+pub async fn clear_query_history(state: State<'_, AppState>) -> Result<(), AppError> {
+    let storage = state
+        .storage
+        .get()
+        .ok_or_else(|| AppError::Storage("Storage not initialized".to_string()))?;
+
+    storage.query_history.clear_all().await
+}
+
 // ==================== Dev Tools Commands ====================
 
 #[tauri::command]
@@ -230,6 +285,8 @@ pub async fn clear_all_data(state: State<'_, AppState>) -> Result<(), AppError> 
     storage.workspaces.clear_all().await?;
     // Clear all connections
     storage.connections.clear_all().await?;
+    // Clear query history
+    storage.query_history.clear_all().await?;
 
     Ok(())
 }
