@@ -76,11 +76,15 @@ export function SettingsMenu({ theme, onThemeChange }: SettingsMenuProps) {
                 </DropdownMenuItem>
               </DropdownMenuSubContent>
             </DropdownMenuSub>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => setDevToolsOpen(true)}>
-              <IconCode className="size-4 mr-2" />
-              Dev Tools
-            </DropdownMenuItem>
+            {import.meta.env.DEV && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setDevToolsOpen(true)}>
+                  <IconCode className="size-4 mr-2" />
+                  Dev Tools
+                </DropdownMenuItem>
+              </>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => console.log('Check for updates')}>
               <IconRefresh className="size-4 mr-2" />
