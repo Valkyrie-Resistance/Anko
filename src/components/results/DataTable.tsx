@@ -18,6 +18,7 @@ import {
 import { tableLogger } from '@/lib/debug'
 import { createPrimaryKeyHash } from '@/lib/table-utils'
 import { cn } from '@/lib/utils'
+import { useRightSidebarStore } from '@/stores/right-sidebar'
 import { createDynamicColumns } from './data-table/columns'
 import { DataTableCell } from './data-table/data-table-cell'
 import { DataTableHeader } from './data-table/data-table-header'
@@ -188,6 +189,44 @@ export const DataTable = memo(function DataTable({
     [onRowDelete, getPrimaryKeyValues],
   )
 
+  // Right sidebar actions
+  const showRowDetails = useRightSidebarStore((s) => s.showRowDetails)
+  const showCellDetails = useRightSidebarStore((s) => s.showCellDetails)
+
+  // Convert result.columns to ColumnDetail format for the sidebar
+  const columnDetails = useMemo(
+    () =>
+      result.columns.map((col) => ({
+        name: col.name,
+        data_type: col.data_type,
+        nullable: col.nullable,
+        key: col.key,
+        default_value: col.default_value,
+        extra: col.extra,
+      })),
+    [result.columns],
+  )
+
+  // Handle row click to show details
+  const handleRowClick = useCallback(
+    (row: Record<string, unknown>) => {
+      // Clean up internal markers before showing
+      const cleanRow = { ...row }
+      delete cleanRow[NEW_ROW_MARKER]
+      delete cleanRow[CHANGE_ID_MARKER]
+      showRowDetails(cleanRow, columnDetails)
+    },
+    [showRowDetails, columnDetails],
+  )
+
+  // Handle cell double-click to show cell details
+  const handleCellDoubleClick = useCallback(
+    (value: unknown, columnName: string, dataType: string) => {
+      showCellDetails(value, columnName, dataType)
+    },
+    [showCellDetails],
+  )
+
   return (
     <div className="h-full flex flex-col bg-black overflow-hidden">
       {enableColumnVisibility && <DataTableToolbar table={table} />}
@@ -253,8 +292,9 @@ export const DataTable = memo(function DataTable({
                 return (
                   <TableRow
                     key={row.id}
+                    onClick={() => handleRowClick(rowData)}
                     className={cn(
-                      'border-b border-zinc-900/50 hover:bg-zinc-900/50 transition-colors',
+                      'border-b border-zinc-900/50 hover:bg-zinc-900/50 transition-colors cursor-pointer',
                       rowIndex % 2 === 1 ? 'bg-zinc-950/30' : 'bg-black',
                       isDeleted && 'bg-red-500/10 line-through opacity-60',
                       isNewRow && 'bg-emerald-500/10 border-l-2 border-l-emerald-500',
@@ -283,6 +323,12 @@ export const DataTable = memo(function DataTable({
                         <TableCell
                           key={cell.id}
                           style={{ width: cell.column.getSize() }}
+                          onDoubleClick={(e) => {
+                            if (!meta?.isRowNumber) {
+                              e.stopPropagation()
+                              handleCellDoubleClick(value, columnName, meta?.dataType ?? 'unknown')
+                            }
+                          }}
                           className={cn(
                             'px-3 py-1 font-mono border-r border-zinc-900/30 last:border-r-0',
                             meta?.sticky && 'sticky left-0 z-10',
