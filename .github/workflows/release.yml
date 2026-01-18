@@ -2,30 +2,51 @@ name: Release
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches: [main]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  check-release:
+    runs-on: ubuntu-latest
+    outputs:
+      should_release: ${{ steps.check.outputs.should_release }}
+      version: ${{ steps.check.outputs.version }}
+    steps:
+      - name: Check commit message for release
+        id: check
+        run: |
+          COMMIT_MSG="${{ github.event.head_commit.message }}"
+          if [[ "$COMMIT_MSG" =~ ^🚀[[:space:]]release:[[:space:]]*(v[0-9]+\.[0-9]+\.[0-9]+) ]]; then
+            VERSION="${BASH_REMATCH[1]}"
+            echo "should_release=true" >> $GITHUB_OUTPUT
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "Detected release commit for version: $VERSION"
+          else
+            echo "should_release=false" >> $GITHUB_OUTPUT
+            echo "Not a release commit"
+          fi
+
   generate-changelog:
+    needs: check-release
+    if: needs.check-release.outputs.should_release == 'true'
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      id-token: write
+      contents: write
     outputs:
-      changelog: ${{ steps.claude.outputs.result }}
+      changelog: ${{ steps.ai.outputs.text }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Get previous tag
         id: prev_tag
         run: |
-          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
           echo "tag=$PREV_TAG" >> $GITHUB_OUTPUT
 
       - name: Get commit log
@@ -40,36 +61,88 @@ jobs:
           echo "$COMMITS" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Generate changelog with Claude
-        id: claude
-        uses: anthropics/claude-code-action@v1
-        with:
-          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          direct_prompt: |
-            Generate a user-friendly changelog for version ${{ github.ref_name }} of Anko (a SQL desktop client).
+      - name: Get release date
+        id: date
+        run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
 
-            Here are the commits since the last release:
+      - name: Generate changelog with AI
+        id: ai
+        uses: vercel/ai-action@v2
+        with:
+          api-key: ${{ secrets.AI_GATEWAY_API_KEY }}
+          model: anthropic/claude-haiku-4-5
+          system: |
+            You are a changelog generator for Anko, a SQL desktop client application.
+            Generate clear, user-friendly changelogs in markdown format.
+            Be concise but descriptive. Write for end users, not developers.
+          prompt: |
+            Generate a changelog entry for version ${{ needs.check-release.outputs.version }} released on ${{ steps.date.outputs.date }}.
+
+            Commits since last release (using conventional commits with emojis):
             ${{ steps.commits.outputs.commits }}
 
-            Format the changelog as markdown with these sections (only include sections that have changes):
-            - ## Highlights (1-2 sentence summary of the most important changes)
-            - ## New Features (user-facing features)
-            - ## Improvements (enhancements to existing features)
-            - ## Bug Fixes (fixed issues)
-            - ## Under the Hood (technical changes users might care about)
+            Commit type mapping:
+            - ✨ feat = New Features
+            - 🐛 fix = Bug Fixes
+            - ⚡ perf = Performance Improvements
+            - 🔒 security = Security Fixes
+            - ♻️ refactor, 💄 style, 🔧 chore, 🏗️ build, 👷 ci = Under the Hood (only if notable)
+
+            Format as markdown:
+            ## [${{ needs.check-release.outputs.version }}] - ${{ steps.date.outputs.date }}
+
+            ### Highlights
+            (1-2 sentence summary of the most important changes)
+
+            ### New Features
+            (from ✨ feat commits)
+
+            ### Improvements
+            (from ⚡ perf commits and notable refactors)
+
+            ### Bug Fixes
+            (from 🐛 fix commits)
+
+            ### Security
+            (from 🔒 security commits, if any)
 
             Guidelines:
-            - Write for end users, not developers
-            - Be concise but descriptive
-            - Group related changes together
-            - Skip trivial changes (typos, minor refactors)
+            - Only include sections that have changes
+            - Skip 📝 docs, 👷 ci, 🔧 chore unless very notable
             - Use present tense ("Add" not "Added")
-            - Don't include commit hashes in the output
+            - Don't include commit hashes or emojis in output
+            - Group related changes together
+            - Be specific about what changed for users
 
-            Output ONLY the markdown changelog, nothing else.
+            Output ONLY the markdown, nothing else.
+
+      - name: Update CHANGELOG.md
+        run: |
+          # Create temp file with new changelog entry
+          echo "${{ steps.ai.outputs.text }}" > new_entry.md
+          echo "" >> new_entry.md
+
+          # Insert after the marker
+          sed -i '/<!-- CHANGELOG_INSERT_MARKER -->/r new_entry.md' CHANGELOG.md
+
+          rm new_entry.md
+
+      - name: Commit changelog
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add CHANGELOG.md
+          git commit -m "docs: update changelog for ${{ needs.check-release.outputs.version }}" || echo "No changes to commit"
+          git push origin HEAD:main || echo "Nothing to push"
+
+      - name: Create and push tag
+        run: |
+          git tag ${{ needs.check-release.outputs.version }}
+          git push origin ${{ needs.check-release.outputs.version }}
 
   create-release:
-    needs: generate-changelog
+    needs: [check-release, generate-changelog]
+    if: needs.check-release.outputs.should_release == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -82,11 +155,13 @@ jobs:
         id: create_release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ needs.check-release.outputs.version }}
           draft: true
           body: ${{ needs.generate-changelog.outputs.changelog }}
 
   build:
-    needs: create-release
+    needs: [check-release, create-release]
+    if: needs.check-release.outputs.should_release == 'true'
     permissions:
       contents: write
     strategy:
@@ -145,7 +220,8 @@ jobs:
           args: ${{ matrix.args }}
 
   publish-release:
-    needs: [create-release, build]
+    needs: [check-release, create-release, build]
+    if: needs.check-release.outputs.should_release == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write

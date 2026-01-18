@@ -185,6 +185,33 @@ Table editing uses a pending changes pattern:
 - `components.json` - shadcn/ui configuration
 - `vite.config.ts` - Vite configuration with Tailwind and path aliases
 
+## Commit Message Format
+
+This project uses conventional commits with emojis. Format: `<emoji> <type>(<scope>): <description>`
+
+| Emoji | Type | Description |
+|-------|------|-------------|
+| ✨ | feat | New feature |
+| 🐛 | fix | Bug fix |
+| 📝 | docs | Documentation |
+| 💄 | style | Styling/formatting |
+| ♻️ | refactor | Code refactoring |
+| ⚡ | perf | Performance improvement |
+| ✅ | test | Tests |
+| 🔧 | chore | Maintenance |
+| 🏗️ | build | Build system |
+| 👷 | ci | CI/CD |
+| 🔒 | security | Security fix |
+| 🚀 | release | Release (triggers build) |
+
+**Examples:**
+```
+✨ feat(editor): add SQL autocomplete
+🐛 fix(connection): handle timeout errors
+♻️ refactor(store): simplify tab management
+🚀 release: v0.1.0
+```
+
 ## Plan Mode
 
 - Make the plan extremely concise. Sacrifice grammar for the sake of concision.

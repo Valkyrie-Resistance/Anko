@@ -1,0 +1,114 @@
+name: Fix Commit Message
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  fix-commit:
+    # Skip if commit is from github-actions bot (to avoid infinite loops)
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Check commit message
+        id: check
+        continue-on-error: true
+        run: |
+          echo "Checking commit message..."
+          bunx commitlint --from HEAD~1 --to HEAD --verbose
+
+      - name: Get commit info
+        if: steps.check.outcome == 'failure'
+        id: info
+        run: |
+          # Get the original commit message
+          ORIGINAL_MSG=$(git log -1 --pretty=format:"%s")
+          echo "original_msg<<EOF" >> $GITHUB_OUTPUT
+          echo "$ORIGINAL_MSG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          # Get the diff summary
+          DIFF_STAT=$(git diff --stat HEAD~1 HEAD)
+          echo "diff_stat<<EOF" >> $GITHUB_OUTPUT
+          echo "$DIFF_STAT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          # Get changed files
+          FILES=$(git diff --name-only HEAD~1 HEAD)
+          echo "files<<EOF" >> $GITHUB_OUTPUT
+          echo "$FILES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Generate fixed commit message
+        if: steps.check.outcome == 'failure'
+        id: ai
+        uses: vercel/ai-action@v2
+        with:
+          api-key: ${{ secrets.AI_GATEWAY_API_KEY }}
+          model: anthropic/claude-haiku-4-5
+          system: |
+            You convert commit messages to conventional commit format with emojis.
+            Output ONLY the commit message, nothing else. No quotes, no explanation.
+          prompt: |
+            Convert this commit message to conventional commit format.
+
+            Original message: ${{ steps.info.outputs.original_msg }}
+
+            Files changed:
+            ${{ steps.info.outputs.files }}
+
+            Diff stats:
+            ${{ steps.info.outputs.diff_stat }}
+
+            Format: <emoji> <type>(<scope>): <description>
+
+            Types with emojis:
+            - ✨ feat = New feature
+            - 🐛 fix = Bug fix
+            - 📝 docs = Documentation
+            - 💄 style = Styling/formatting
+            - ♻️ refactor = Code refactoring
+            - ⚡ perf = Performance
+            - ✅ test = Tests
+            - 🔧 chore = Maintenance
+            - 🏗️ build = Build system
+            - 👷 ci = CI/CD
+            - 🔒 security = Security fix
+
+            Rules:
+            - Scope is optional, derive from file paths if clear
+            - Keep description concise (<50 chars if possible)
+            - Use imperative mood ("add" not "added")
+            - If original looks like a release commit, preserve it
+
+            Output the single-line commit message only.
+
+      - name: Amend commit
+        if: steps.check.outcome == 'failure'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          NEW_MSG="${{ steps.ai.outputs.text }}"
+          echo "New commit message: $NEW_MSG"
+
+          # Amend the commit with the new message
+          git commit --amend -m "$NEW_MSG"
+
+          # Force push (safe since we just amended the latest commit)
+          git push --force-with-lease
