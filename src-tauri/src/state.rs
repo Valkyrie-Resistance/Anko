@@ -8,12 +8,13 @@ use crate::db::mysql::MySqlConnector;
 use crate::db::postgres::PostgresConnector;
 use crate::db::ConnectionConfig;
 use crate::error::AppError;
-use crate::storage::{ConnectionStorage, QueryHistoryStorage, WorkspaceStorage};
+use crate::storage::{ConnectionStorage, QueryHistoryStorage, SavedQueriesStorage, WorkspaceStorage};
 
 pub struct Storage {
     pub connections: ConnectionStorage,
     pub workspaces: WorkspaceStorage,
     pub query_history: QueryHistoryStorage,
+    pub saved_queries: SavedQueriesStorage,
 }
 
 pub struct AppState {
@@ -34,12 +35,15 @@ impl AppState {
         let pool = conn_storage.get_pool();
         let workspace_storage = WorkspaceStorage::new(pool.clone());
         workspace_storage.initialize_schema().await?;
-        let query_history_storage = QueryHistoryStorage::new(pool);
+        let query_history_storage = QueryHistoryStorage::new(pool.clone());
         query_history_storage.initialize_schema().await?;
+        let saved_queries_storage = SavedQueriesStorage::new(pool);
+        saved_queries_storage.initialize_schema().await?;
         let storage = Storage {
             connections: conn_storage,
             workspaces: workspace_storage,
             query_history: query_history_storage,
+            saved_queries: saved_queries_storage,
         };
         self.storage.set(storage).map_err(|_| AppError::Storage("Storage already initialized".to_string()))?;
         Ok(())
