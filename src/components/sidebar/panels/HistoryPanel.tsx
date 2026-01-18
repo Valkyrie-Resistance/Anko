@@ -131,7 +131,7 @@ export function HistoryPanel() {
         const tabId = `history-${entry.id}-${Date.now()}`
         addQueryTab({
           id: tabId,
-          connectionId: activeConn.connectionId,
+          connectionId: activeConn.id,
           query: entry.query,
           isExecuting: false,
         })
