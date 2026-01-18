@@ -12,7 +12,6 @@ export function RightSidebarContextContent() {
   const [activeTab, setActiveTab] = useState('data')
 
   // Determine what tabs to show based on context
-  const hasDataContent = context.type === 'row' || context.type === 'cell'
   const hasTableContent = context.type === 'table'
 
   // If no context, show empty state
@@ -32,9 +31,9 @@ export function RightSidebarContextContent() {
   }
 
   return (
-    <div className="flex flex-col h-full">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
-        <div className="border-b px-2 pt-2">
+    <div className="flex flex-col h-full overflow-hidden">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
+        <div className="border-b px-2 pt-2 pb-2">
           <TabsList className="w-full">
             <TabsTrigger value="data" className="flex-1 text-xs gap-1">
               <IconDatabase className="size-3.5" />
@@ -51,26 +50,28 @@ export function RightSidebarContextContent() {
           </TabsList>
         </div>
 
-        <TabsContent value="data" className="flex-1 min-h-0 m-0 overflow-hidden">
-          <DataTabContent />
-        </TabsContent>
+        <div className="flex-1 overflow-hidden">
+          <TabsContent value="data" className="h-full m-0 data-[state=inactive]:hidden">
+            <DataTabContent />
+          </TabsContent>
 
-        <TabsContent value="table" className="flex-1 min-h-0 m-0 overflow-hidden">
-          {hasTableContent && (
-            <TableSchemaView
-              tableName={context.tableName}
-              columns={context.columns}
-              database={context.database}
-              schema={context.schema}
-            />
-          )}
-        </TabsContent>
+          <TabsContent value="table" className="h-full m-0 data-[state=inactive]:hidden">
+            {hasTableContent && (
+              <TableSchemaView
+                tableName={context.tableName}
+                columns={context.columns}
+                database={context.database}
+                schema={context.schema}
+              />
+            )}
+          </TabsContent>
 
-        <TabsContent value="utilities" className="flex-1 min-h-0 m-0 overflow-hidden">
-          {hasTableContent && (
-            <ZodGeneratorView tableName={context.tableName} columns={context.columns} />
-          )}
-        </TabsContent>
+          <TabsContent value="utilities" className="h-full m-0 data-[state=inactive]:hidden">
+            {hasTableContent && (
+              <ZodGeneratorView tableName={context.tableName} columns={context.columns} />
+            )}
+          </TabsContent>
+        </div>
       </Tabs>
     </div>
   )
@@ -92,7 +93,7 @@ function DataTabContent() {
       )
     case 'table':
       return (
-        <div className="flex-1 flex items-center justify-center p-4">
+        <div className="h-full flex items-center justify-center p-4">
           <p className="text-xs text-muted-foreground text-center">
             Click a row to see its data, or double-click a cell to inspect it
           </p>
@@ -101,7 +102,7 @@ function DataTabContent() {
     case 'none':
     default:
       return (
-        <div className="flex-1 flex items-center justify-center p-4">
+        <div className="h-full flex items-center justify-center p-4">
           <p className="text-xs text-muted-foreground text-center">
             Select a row or cell to view data
           </p>

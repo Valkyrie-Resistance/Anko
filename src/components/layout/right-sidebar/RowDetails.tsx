@@ -81,8 +81,8 @@ function CollapsibleFieldRow({ column, value, onCopy }: CollapsibleFieldRowProps
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
       <div className="group rounded-md hover:bg-accent/30 transition-colors">
-        <CollapsibleTrigger className="flex items-center justify-between w-full px-2 py-1 text-left">
-          <div className="flex items-center gap-1.5 min-w-0 flex-1">
+        <div className="flex items-center justify-between w-full px-2 py-1">
+          <CollapsibleTrigger className="flex items-center gap-1.5 min-w-0 flex-1 text-left">
             {isLongValue ? (
               isOpen ? (
                 <IconChevronDown className="size-3 text-muted-foreground shrink-0" />
@@ -99,19 +99,16 @@ function CollapsibleFieldRow({ column, value, onCopy }: CollapsibleFieldRowProps
                 {column.key}
               </span>
             )}
-          </div>
+          </CollapsibleTrigger>
           <button
             type="button"
-            onClick={(e) => {
-              e.stopPropagation()
-              onCopy()
-            }}
+            onClick={onCopy}
             className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-accent transition-all shrink-0"
             title="Copy value"
           >
             <IconClipboard className="size-3 text-muted-foreground" />
           </button>
-        </CollapsibleTrigger>
+        </div>
 
         <CollapsibleContent>
           <div
