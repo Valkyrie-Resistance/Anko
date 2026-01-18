@@ -101,17 +101,19 @@ jobs:
       - name: Amend commit
         if: steps.check.outcome == 'failure'
         run: |
-          # Preserve the original author
-          ORIGINAL_AUTHOR=$(git log -1 --pretty=format:"%an <%ae>")
+          # Get the original author info
+          ORIGINAL_NAME=$(git log -1 --pretty=format:"%an")
+          ORIGINAL_EMAIL=$(git log -1 --pretty=format:"%ae")
 
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          # Set both author and committer to the original author
+          git config user.name "$ORIGINAL_NAME"
+          git config user.email "$ORIGINAL_EMAIL"
 
           NEW_MSG="${{ steps.ai.outputs.text }}"
           echo "New commit message: $NEW_MSG"
 
-          # Amend the commit with the new message, preserving original author
-          git commit --amend -m "$NEW_MSG" --author="$ORIGINAL_AUTHOR"
+          # Amend the commit - both author and committer will be the original author
+          git commit --amend -m "$NEW_MSG"
 
           # Force push (safe since we just amended the latest commit)
           git push --force-with-lease
