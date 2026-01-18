@@ -181,15 +181,7 @@ export function TabActionDialog({ open, mode, onOpenChange }: TabActionDialogPro
         toast.error('Failed to load schemas', { description: formatErrorMessage(e) })
       })
       .finally(() => setIsLoadingSchemas(false))
-  }, [
-    open,
-    mode,
-    driver,
-    runtimeConnectionId,
-    selectedDatabase,
-    schemas.length,
-    selectedSchema,
-  ])
+  }, [open, mode, driver, runtimeConnectionId, selectedDatabase, schemas.length, selectedSchema])
 
   useEffect(() => {
     if (!open || mode !== 'table') return

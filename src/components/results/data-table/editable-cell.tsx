@@ -66,7 +66,12 @@ export function EditableCell({
     // Only trigger change if value actually changed
     if (newValue !== value) {
       const columnName = cell.column.id
-      editLogger.debug('cell edit committed', { column: columnName, oldValue: value, newValue, coercedType })
+      editLogger.debug('cell edit committed', {
+        column: columnName,
+        oldValue: value,
+        newValue,
+        coercedType,
+      })
       onValueChange(newValue)
     } else {
       editLogger.debug('cell edit cancelled (no change)', { column: cell.column.id })

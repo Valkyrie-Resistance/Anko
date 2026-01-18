@@ -6,18 +6,18 @@ export default {
       2,
       'always',
       [
-        '✨ feat',      // New feature
-        '🐛 fix',       // Bug fix
-        '📝 docs',      // Documentation
-        '💄 style',     // Styling/formatting
-        '♻️ refactor',  // Code refactoring
-        '⚡ perf',      // Performance improvement
-        '✅ test',      // Tests
-        '🔧 chore',     // Maintenance
-        '🏗️ build',     // Build system
-        '👷 ci',        // CI/CD
-        '🔒 security',  // Security fix
-        '🚀 release',   // Release
+        '✨ feat', // New feature
+        '🐛 fix', // Bug fix
+        '📝 docs', // Documentation
+        '💄 style', // Styling/formatting
+        '♻️ refactor', // Code refactoring
+        '⚡ perf', // Performance improvement
+        '✅ test', // Tests
+        '🔧 chore', // Maintenance
+        '🏗️ build', // Build system
+        '👷 ci', // CI/CD
+        '🔒 security', // Security fix
+        '🚀 release', // Release
       ],
     ],
     'type-empty': [2, 'never'],
@@ -27,7 +27,8 @@ export default {
   },
   parserPreset: {
     parserOpts: {
-      headerPattern: /^([\p{Emoji_Presentation}\p{Extended_Pictographic}]+\s\w+)(?:\((.+)\))?:\s(.+)$/u,
+      headerPattern:
+        /^([\p{Emoji_Presentation}\p{Extended_Pictographic}]+\s\w+)(?:\((.+)\))?:\s(.+)$/u,
       headerCorrespondence: ['type', 'scope', 'subject'],
     },
   },

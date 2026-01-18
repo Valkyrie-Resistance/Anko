@@ -88,10 +88,7 @@ function App() {
 
     const handleKeyDown = (e: KeyboardEvent) => {
       // Block F5, Cmd+R, Ctrl+R (reload)
-      if (
-        e.key === 'F5' ||
-        ((e.metaKey || e.ctrlKey) && e.key === 'r')
-      ) {
+      if (e.key === 'F5' || ((e.metaKey || e.ctrlKey) && e.key === 'r')) {
         e.preventDefault()
       }
     }

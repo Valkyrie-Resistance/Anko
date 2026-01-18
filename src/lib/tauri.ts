@@ -209,7 +209,10 @@ export async function listSavedQueries(workspaceId?: string): Promise<SavedQuery
   return trackedInvoke<SavedQuery[]>('list_saved_queries', { workspaceId })
 }
 
-export async function updateSavedQuery(id: string, input: UpdateSavedQueryInput): Promise<SavedQuery> {
+export async function updateSavedQuery(
+  id: string,
+  input: UpdateSavedQueryInput,
+): Promise<SavedQuery> {
   return trackedInvoke<SavedQuery>('update_saved_query', { id, input })
 }
 

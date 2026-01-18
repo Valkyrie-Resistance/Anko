@@ -55,10 +55,7 @@ export function RightSidebarContextContent() {
       {/* Custom Tab List */}
       <div className="border-b px-2 pt-2 pb-2">
         <div className="flex items-center bg-muted rounded-lg p-[3px]">
-          <TabButton
-            active={activeTab === 'data'}
-            onClick={() => setActiveTab('data')}
-          >
+          <TabButton active={activeTab === 'data'} onClick={() => setActiveTab('data')}>
             <IconDatabase className="size-3.5" />
             Data
           </TabButton>
@@ -115,9 +112,7 @@ function TabButton({ active, onClick, disabled, children }: TabButtonProps) {
       disabled={disabled}
       className={cn(
         'flex-1 flex items-center justify-center gap-1 px-2 py-1 text-xs font-medium rounded-md transition-colors',
-        active
-          ? 'bg-background text-foreground'
-          : 'text-muted-foreground hover:text-foreground',
+        active ? 'bg-background text-foreground' : 'text-muted-foreground hover:text-foreground',
         disabled && 'opacity-50 cursor-not-allowed',
       )}
     >
@@ -154,7 +149,6 @@ function DataTabContent() {
           </p>
         </div>
       )
-    case 'none':
     default:
       return (
         <div className="h-full flex items-center justify-center p-4">

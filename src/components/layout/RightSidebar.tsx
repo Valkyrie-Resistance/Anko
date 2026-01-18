@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
 import type * as React from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { useRightSidebarStore } from '@/stores/right-sidebar'
 
@@ -74,7 +74,9 @@ export function RightSidebar({ children, className }: RightSidebarProps) {
         {/* Resize handle */}
         <div
           role="separator"
+          tabIndex={0}
           aria-orientation="vertical"
+          aria-valuenow={width}
           onMouseDown={handleMouseDown}
           className={cn(
             'absolute left-0 top-0 bottom-0 w-1 cursor-col-resize z-20 hover:bg-primary/50 transition-colors',
@@ -82,9 +84,7 @@ export function RightSidebar({ children, className }: RightSidebarProps) {
           )}
         />
         {/* Content wrapper to ensure proper flex sizing */}
-        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-          {children}
-        </div>
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">{children}</div>
       </div>
     </div>
   )

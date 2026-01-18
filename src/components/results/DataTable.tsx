@@ -1,3 +1,4 @@
+import { IconClipboard, IconCode, IconEye, IconRowInsertBottom } from '@tabler/icons-react'
 import {
   type ColumnSizingState,
   getCoreRowModel,
@@ -6,12 +7,6 @@ import {
   useReactTable,
   type VisibilityState,
 } from '@tanstack/react-table'
-import {
-  IconClipboard,
-  IconCode,
-  IconEye,
-  IconRowInsertBottom,
-} from '@tabler/icons-react'
 import { memo, useCallback, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import {
@@ -194,7 +189,12 @@ export const DataTable = memo(function DataTable({
     ) => {
       if (!onCellEdit) return
       const pkValues = getPrimaryKeyValues(row)
-      tableLogger.debug('cell value changed', { rowIndex, columnName, oldValue: originalValue, newValue })
+      tableLogger.debug('cell value changed', {
+        rowIndex,
+        columnName,
+        oldValue: originalValue,
+        newValue,
+      })
       onCellEdit(rowIndex, pkValues, columnName, originalValue, newValue, row)
     },
     [onCellEdit, getPrimaryKeyValues],
@@ -371,7 +371,9 @@ export const DataTable = memo(function DataTable({
                               isNewRow={isNewRow}
                               isMarkedForDeletion={isDeleted}
                               onDelete={() => handleRowDelete(rowIndex, rowData)}
-                              onUndoDelete={() => deleteChangeId && onUndoRowDelete?.(deleteChangeId)}
+                              onUndoDelete={() =>
+                                deleteChangeId && onUndoRowDelete?.(deleteChangeId)
+                              }
                               onRemoveNewRow={() => changeId && onRemoveNewRow?.(changeId)}
                             />
                           </TableCell>
@@ -401,7 +403,11 @@ export const DataTable = memo(function DataTable({
                               onDoubleClick={(e) => {
                                 if (!meta?.isRowNumber) {
                                   e.stopPropagation()
-                                  handleCellDoubleClick(value, columnName, meta?.dataType ?? 'unknown')
+                                  handleCellDoubleClick(
+                                    value,
+                                    columnName,
+                                    meta?.dataType ?? 'unknown',
+                                  )
                                 }
                               }}
                               className={cn(

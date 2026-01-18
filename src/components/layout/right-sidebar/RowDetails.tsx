@@ -85,7 +85,9 @@ function FieldRow({ column, value, onCopy }: FieldRowProps) {
           <div className="flex items-center gap-1.5 min-w-0 flex-1">
             <div className="size-3 shrink-0" />
             <span className="text-xs font-medium text-foreground truncate">{column.name}</span>
-            <span className="text-[10px] text-muted-foreground/60 shrink-0">{column.data_type}</span>
+            <span className="text-[10px] text-muted-foreground/60 shrink-0">
+              {column.data_type}
+            </span>
             {column.key && (
               <span className="text-[9px] px-1 py-0.5 rounded bg-primary/10 text-primary shrink-0">
                 {column.key}
@@ -122,7 +124,9 @@ function FieldRow({ column, value, onCopy }: FieldRowProps) {
               <IconChevronRight className="size-3 text-muted-foreground shrink-0" />
             )}
             <span className="text-xs font-medium text-foreground truncate">{column.name}</span>
-            <span className="text-[10px] text-muted-foreground/60 shrink-0">{column.data_type}</span>
+            <span className="text-[10px] text-muted-foreground/60 shrink-0">
+              {column.data_type}
+            </span>
             {column.key && (
               <span className="text-[9px] px-1 py-0.5 rounded bg-primary/10 text-primary shrink-0">
                 {column.key}

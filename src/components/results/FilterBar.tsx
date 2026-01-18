@@ -31,7 +31,11 @@ const OPERATORS: { value: FilterOperator; label: string }[] = [
   { value: 'is_not_null', label: 'IS NOT NULL' },
 ]
 
-export const FilterBar = memo(function FilterBar({ columns, filters, onFiltersChange }: FilterBarProps) {
+export const FilterBar = memo(function FilterBar({
+  columns,
+  filters,
+  onFiltersChange,
+}: FilterBarProps) {
   const [selectedColumn, setSelectedColumn] = useState<string>('')
   const [selectedOperator, setSelectedOperator] = useState<FilterOperator>('equals')
   const [filterValue, setFilterValue] = useState('')
@@ -48,7 +52,11 @@ export const FilterBar = memo(function FilterBar({ columns, filters, onFiltersCh
       value: isNullOperator ? '' : filterValue,
     }
 
-    filterLogger.debug('filter added', { column: selectedColumn, operator: selectedOperator, value: isNullOperator ? null : filterValue })
+    filterLogger.debug('filter added', {
+      column: selectedColumn,
+      operator: selectedOperator,
+      value: isNullOperator ? null : filterValue,
+    })
     onFiltersChange([...filters, newFilter])
     setSelectedColumn('')
     setSelectedOperator('equals')
@@ -57,7 +65,10 @@ export const FilterBar = memo(function FilterBar({ columns, filters, onFiltersCh
 
   const handleRemoveFilter = (index: number) => {
     const removedFilter = filters[index]
-    filterLogger.debug('filter removed', { column: removedFilter.column, operator: removedFilter.operator })
+    filterLogger.debug('filter removed', {
+      column: removedFilter.column,
+      operator: removedFilter.operator,
+    })
     onFiltersChange(filters.filter((_, i) => i !== index))
   }
 

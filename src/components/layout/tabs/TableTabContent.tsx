@@ -212,7 +212,11 @@ export function TableTabContent({ tabId }: TableTabContentProps) {
       const database = schemaName ? databaseName : undefined
       const context = schemaName || databaseName
 
-      tableLogger.debug('loading page', { tableName, page: pageNumber, filterCount: activeFilters.length })
+      tableLogger.debug('loading page', {
+        tableName,
+        page: pageNumber,
+        filterCount: activeFilters.length,
+      })
       const timer = createTimer(tableLogger, `load page ${pageNumber}`)
       setQueryExecutingRef.current(tabId, true)
 
@@ -402,7 +406,11 @@ export function TableTabContent({ tabId }: TableTabContentProps) {
         pendingChanges,
       )
 
-      tableLogger.debug('committing changes', { tableName, statementCount: sqlStatements.length, statements: sqlStatements })
+      tableLogger.debug('committing changes', {
+        tableName,
+        statementCount: sqlStatements.length,
+        statements: sqlStatements,
+      })
       const timer = createTimer(tableLogger, 'commit changes')
 
       const database = schemaName ? databaseName : undefined
@@ -489,7 +497,7 @@ export function TableTabContent({ tabId }: TableTabContentProps) {
         loadTotalRows(newFilters)
       }
     },
-    [hasChanges, loadPage, loadTotalRows]
+    [hasChanges, loadPage, loadTotalRows],
   )
 
   // Pagination state - compute before early return so hooks above can reference
@@ -500,19 +508,19 @@ export function TableTabContent({ tabId }: TableTabContentProps) {
   // Memoize pagination handlers to prevent re-renders
   const handleFirstPage = useCallback(
     () => guardedNavigate(() => loadPage(0)),
-    [guardedNavigate, loadPage]
+    [guardedNavigate, loadPage],
   )
   const handlePrevPage = useCallback(
     () => guardedNavigate(() => loadPage(Math.max(0, currentPage - 1))),
-    [guardedNavigate, loadPage, currentPage]
+    [guardedNavigate, loadPage, currentPage],
   )
   const handleNextPage = useCallback(
     () => guardedNavigate(() => loadPage(currentPage + 1)),
-    [guardedNavigate, loadPage, currentPage]
+    [guardedNavigate, loadPage, currentPage],
   )
   const handleLastPage = useCallback(
     () => guardedNavigate(() => loadPage(Math.max(0, totalPages - 1))),
-    [guardedNavigate, loadPage, totalPages]
+    [guardedNavigate, loadPage, totalPages],
   )
 
   // Early return if no tab or connection data
@@ -530,11 +538,7 @@ export function TableTabContent({ tabId }: TableTabContentProps) {
   return (
     <div className="flex flex-col h-full bg-black">
       {/* Filter Bar */}
-      <FilterBar
-        columns={tabColumns}
-        filters={filters}
-        onFiltersChange={handleFiltersChange}
-      />
+      <FilterBar columns={tabColumns} filters={filters} onFiltersChange={handleFiltersChange} />
 
       {/* Table Content */}
       <div className="flex-1 min-h-0">

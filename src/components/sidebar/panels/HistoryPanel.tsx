@@ -253,7 +253,13 @@ interface HistoryEntryProps {
   onSaveToQueries: () => void
 }
 
-function HistoryEntry({ entry, onDelete, onCopy, onOpenInEditor, onSaveToQueries }: HistoryEntryProps) {
+function HistoryEntry({
+  entry,
+  onDelete,
+  onCopy,
+  onOpenInEditor,
+  onSaveToQueries,
+}: HistoryEntryProps) {
   // Format timestamp
   const formattedTime = useMemo(() => {
     const date = new Date(entry.executedAt)
@@ -280,8 +286,11 @@ function HistoryEntry({ entry, onDelete, onCopy, onOpenInEditor, onSaveToQueries
     <ContextMenu>
       <ContextMenuTrigger>
         <div
+          role="button"
+          tabIndex={0}
           className="group px-2 py-1.5 rounded-md hover:bg-accent/50 cursor-pointer select-none"
           onDoubleClick={onOpenInEditor}
+          onKeyDown={(e) => e.key === 'Enter' && onOpenInEditor()}
         >
           {/* Status and time */}
           <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground mb-0.5">

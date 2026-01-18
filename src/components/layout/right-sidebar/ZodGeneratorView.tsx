@@ -24,9 +24,7 @@ export function ZodGeneratorView({ tableName, columns }: ZodGeneratorViewProps) 
       <div className="flex items-center justify-between px-3 py-2 border-b">
         <div>
           <span className="text-xs font-medium text-foreground">Zod Schema</span>
-          <p className="text-[10px] text-muted-foreground">
-            Auto-generated from table structure
-          </p>
+          <p className="text-[10px] text-muted-foreground">Auto-generated from table structure</p>
         </div>
         <button
           type="button"

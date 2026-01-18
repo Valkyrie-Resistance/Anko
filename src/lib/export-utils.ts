@@ -20,16 +20,17 @@ function escapeCSVValue(value: unknown): string {
 /**
  * Exports query results to CSV format and saves to file.
  */
-export async function exportToCSV(result: QueryResult, defaultFilename = 'export'): Promise<boolean> {
+export async function exportToCSV(
+  result: QueryResult,
+  defaultFilename = 'export',
+): Promise<boolean> {
   if (!result || result.columns.length === 0 || result.rows.length === 0) {
     throw new Error('No data to export')
   }
 
   // Build CSV content
   const headers = result.columns.map((col) => escapeCSVValue(col.name)).join(',')
-  const rows = result.rows.map((row) =>
-    row.map((cell) => escapeCSVValue(cell)).join(',')
-  )
+  const rows = result.rows.map((row) => row.map((cell) => escapeCSVValue(cell)).join(','))
   const csvContent = [headers, ...rows].join('\n')
 
   // Open save dialog
@@ -48,7 +49,10 @@ export async function exportToCSV(result: QueryResult, defaultFilename = 'export
 /**
  * Exports query results to JSON format and saves to file.
  */
-export async function exportToJSON(result: QueryResult, defaultFilename = 'export'): Promise<boolean> {
+export async function exportToJSON(
+  result: QueryResult,
+  defaultFilename = 'export',
+): Promise<boolean> {
   if (!result || result.columns.length === 0 || result.rows.length === 0) {
     throw new Error('No data to export')
   }
@@ -97,7 +101,7 @@ function escapeSQLValue(value: unknown): string {
 export async function exportToSQL(
   result: QueryResult,
   tableName = 'table_name',
-  defaultFilename = 'export'
+  defaultFilename = 'export',
 ): Promise<boolean> {
   if (!result || result.columns.length === 0 || result.rows.length === 0) {
     throw new Error('No data to export')
