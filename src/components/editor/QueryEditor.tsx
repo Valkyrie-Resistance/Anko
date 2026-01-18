@@ -128,7 +128,7 @@ export function QueryEditor({ tabId }: QueryEditorProps) {
 
   const handleExecute = useCallback(async () => {
     const query = queryRef.current
-    if (!query?.trim()) return
+    if (!query?.trim() || !connectionId) return
 
     editorLogger.debug('executing query', { tabId, connectionId, database: selectedDatabase, queryLength: query.length })
     const timer = createTimer(editorLogger, 'query execution')

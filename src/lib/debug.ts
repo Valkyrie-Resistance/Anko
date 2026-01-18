@@ -45,7 +45,11 @@ function isNamespaceEnabled(namespace: string): boolean {
  * Structured Logger class with namespace and log level support.
  */
 export class Logger {
-  constructor(private namespace: string) {}
+  private namespace: string
+
+  constructor(namespace: string) {
+    this.namespace = namespace
+  }
 
   private log(level: LogLevel, ...args: unknown[]): void {
     // In production, only warn and error are logged
@@ -134,6 +138,3 @@ export const debug = IS_DEV
       }
     }
   : () => {}
-
-// Keep console.error available for error logging in production
-export type { console }
