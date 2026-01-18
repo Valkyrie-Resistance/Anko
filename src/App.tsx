@@ -81,6 +81,32 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [queryTabs.length, activeTabId, removeQueryTab])
 
+  // Disable right-click and browser reload shortcuts in production
+  useEffect(() => {
+    if (import.meta.env.DEV) return
+
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault()
+    }
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Block F5, Cmd+R, Ctrl+R (reload)
+      if (
+        e.key === 'F5' ||
+        ((e.metaKey || e.ctrlKey) && e.key === 'r')
+      ) {
+        e.preventDefault()
+      }
+    }
+
+    window.addEventListener('contextmenu', handleContextMenu)
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('contextmenu', handleContextMenu)
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [])
+
   // Handle connection selection - create a new query tab
   const handleConnectionSelect = useCallback(
     (connection: ActiveConnection) => {
