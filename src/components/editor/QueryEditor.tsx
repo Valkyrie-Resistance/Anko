@@ -1,19 +1,30 @@
-import { IconDatabase, IconServer } from '@tabler/icons-react'
+import { IconDatabase, IconDeviceFloppy, IconServer } from '@tabler/icons-react'
 import { ChevronDown, ChevronRight, Loader2Icon, PlayIcon } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { createTimer, editorLogger } from '@/lib/debug'
 import { formatErrorMessage } from '@/lib/error-utils'
-import { addQueryHistory, executeQuery, getDatabases } from '@/lib/tauri'
+import { addQueryHistory, createSavedQuery, executeQuery, getDatabases } from '@/lib/tauri'
 import { useConnectionStore } from '@/stores/connection'
 import { useQueryHistoryStore } from '@/stores/query-history'
+import { useSavedQueriesStore } from '@/stores/saved-queries'
 import { useWorkspaceStore } from '@/stores/workspace'
 import { SQLEditor } from './SQLEditor'
 import type { SchemaContext } from './sql-autocomplete'
@@ -23,12 +34,18 @@ interface QueryEditorProps {
 }
 
 export function QueryEditor({ tabId }: QueryEditorProps) {
+  // Save query dialog state
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false)
+  const [saveQueryName, setSaveQueryName] = useState('')
+  const [saveQueryDescription, setSaveQueryDescription] = useState('')
+
   // Data selectors (these are stable object references from store)
   const queryTabs = useConnectionStore((s) => s.queryTabs)
   const activeConnections = useConnectionStore((s) => s.activeConnections)
   const schemaCache = useConnectionStore((s) => s.schemaCache)
   const workspaces = useWorkspaceStore((s) => s.workspaces)
   const activeWorkspaceId = useWorkspaceStore((s) => s.activeWorkspaceId)
+  const addSavedQuery = useSavedQueriesStore((s) => s.addQuery)
 
   // Refs for store actions (prevents infinite re-renders)
   const updateQueryTabRef = useRef(useConnectionStore.getState().updateQueryTab)
@@ -201,6 +218,43 @@ export function QueryEditor({ tabId }: QueryEditorProps) {
     [tabId],
   )
 
+  // Handle opening save dialog
+  const handleOpenSaveDialog = useCallback(() => {
+    const query = queryRef.current?.trim()
+    if (!query) return
+    // Generate default name from first line of query
+    const firstLine = query.split('\n')[0]
+    const defaultName = firstLine.length > 30 ? `${firstLine.slice(0, 30)}...` : firstLine
+    setSaveQueryName(defaultName)
+    setSaveQueryDescription('')
+    setSaveDialogOpen(true)
+  }, [])
+
+  // Handle saving query
+  const handleSaveQuery = useCallback(async () => {
+    const query = queryRef.current?.trim()
+    if (!query || !saveQueryName.trim()) return
+
+    try {
+      const saved = await createSavedQuery({
+        name: saveQueryName.trim(),
+        query,
+        description: saveQueryDescription.trim() || null,
+        workspaceId: activeWorkspaceId !== 'default' ? activeWorkspaceId : null,
+        connectionId: connectionInfoId ?? null,
+        databaseName: selectedDatabase ?? null,
+      })
+      addSavedQuery(saved)
+      setSaveDialogOpen(false)
+      toast.success('Query saved', {
+        description: 'You can find it in the Saved Queries panel',
+      })
+    } catch (e) {
+      editorLogger.warn('Failed to save query', e)
+      toast.error('Failed to save query')
+    }
+  }, [saveQueryName, saveQueryDescription, activeWorkspaceId, connectionInfoId, selectedDatabase, addSavedQuery])
+
   if (!tab || !connection) return null
 
   return (
@@ -297,7 +351,18 @@ export function QueryEditor({ tabId }: QueryEditorProps) {
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleOpenSaveDialog}
+            disabled={!tab.query.trim()}
+            className="h-7 px-2.5 gap-1.5 text-xs border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900"
+            title="Save Query"
+          >
+            <IconDeviceFloppy className="size-3.5" />
+            Save
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger
               render={
@@ -347,6 +412,61 @@ export function QueryEditor({ tabId }: QueryEditorProps) {
           schema={schema}
         />
       </div>
+
+      {/* Save Query Dialog */}
+      <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              handleSaveQuery()
+            }}
+          >
+            <DialogHeader>
+              <DialogTitle>Save Query</DialogTitle>
+              <DialogDescription>
+                Save this query for quick access later.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="save-query-name">Name</Label>
+                <Input
+                  id="save-query-name"
+                  value={saveQueryName}
+                  onChange={(e) => setSaveQueryName(e.target.value)}
+                  placeholder="e.g., Get all active users"
+                  autoFocus
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="save-query-description">Description (optional)</Label>
+                <Input
+                  id="save-query-description"
+                  value={saveQueryDescription}
+                  onChange={(e) => setSaveQueryDescription(e.target.value)}
+                  placeholder="Brief description of what this query does"
+                />
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setSaveDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={!saveQueryName.trim()}>
+                Save Query
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

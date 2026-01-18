@@ -137,7 +137,7 @@ export function SavedQueriesPanel() {
         const tabId = `saved-${savedQuery.id}-${Date.now()}`
         addQueryTab({
           id: tabId,
-          connectionId: activeConn.connectionId,
+          connectionId: activeConn.id,
           query: savedQuery.query,
           isExecuting: false,
         })
