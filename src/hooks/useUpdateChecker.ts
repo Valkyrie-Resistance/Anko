@@ -1,6 +1,11 @@
 import { useEffect, useRef } from 'react'
 import { toast } from 'sonner'
-import { checkForUpdate, isVersionSkipped, shouldRemindLater } from '@/lib/updater'
+import {
+  checkForUpdate,
+  fetchChangelogForVersion,
+  isVersionSkipped,
+  shouldRemindLater,
+} from '@/lib/updater'
 import { useUpdateStore } from '@/stores/update'
 
 const UPDATE_CHECK_DELAY = 3000 // 3 seconds after app startup
@@ -28,7 +33,14 @@ export function useUpdateChecker() {
           return
         }
 
-        setUpdateAvailable(true, result.info, result.update)
+        // Fetch changelog from CHANGELOG.md for the new version
+        const changelogBody = await fetchChangelogForVersion(result.info.version)
+        const enrichedInfo = {
+          ...result.info,
+          body: changelogBody ?? result.info.body,
+        }
+
+        setUpdateAvailable(true, enrichedInfo, result.update)
 
         toast('Update Available', {
           description: `Version ${result.info.version} is ready to download`,
