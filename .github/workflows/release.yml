@@ -29,8 +29,29 @@ jobs:
             echo "Not a release commit"
           fi
 
-  generate-changelog:
+  lint-and-typecheck:
     needs: check-release
+    if: needs.check-release.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Lint
+        run: bun run lint
+
+      - name: Type check
+        run: bun run tsc --noEmit
+
+  generate-changelog:
+    needs: [check-release, lint-and-typecheck]
     if: needs.check-release.outputs.should_release == 'true'
     runs-on: ubuntu-latest
     permissions:
