@@ -81,7 +81,10 @@ export function RightSidebar({ children, className }: RightSidebarProps) {
             isResizing && 'bg-primary/50',
           )}
         />
-        {children}
+        {/* Content wrapper to ensure proper flex sizing */}
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          {children}
+        </div>
       </div>
     </div>
   )
