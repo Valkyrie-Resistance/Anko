@@ -100,3 +100,96 @@ export function shouldRemindLater(): boolean {
 export function clearRemindLater(): void {
   localStorage.removeItem(REMIND_LATER_KEY)
 }
+
+const CHANGELOG_URL = 'https://raw.githubusercontent.com/Valkyrie-Resistance/Anko/main/CHANGELOG.md'
+
+/**
+ * Fetch changelog content for a specific version from CHANGELOG.md
+ */
+export async function fetchChangelogForVersion(version: string): Promise<string | undefined> {
+  try {
+    const response = await fetch(CHANGELOG_URL)
+    if (!response.ok) return undefined
+
+    const changelog = await response.text()
+    return parseChangelogForVersion(changelog, version)
+  } catch (error) {
+    console.error('Failed to fetch changelog:', error)
+    return undefined
+  }
+}
+
+export interface LatestChangelog {
+  version: string
+  body: string
+  date: string
+}
+
+/**
+ * Fetch the latest changelog entry from CHANGELOG.md
+ */
+export async function fetchLatestChangelog(): Promise<LatestChangelog | undefined> {
+  try {
+    const response = await fetch(CHANGELOG_URL)
+    if (!response.ok) return undefined
+
+    const changelog = await response.text()
+    return parseLatestChangelog(changelog)
+  } catch (error) {
+    console.error('Failed to fetch changelog:', error)
+    return undefined
+  }
+}
+
+/**
+ * Parse the latest version entry from changelog
+ */
+function parseLatestChangelog(changelog: string): LatestChangelog | undefined {
+  // Find the first version header: ## [v0.2.1] - 2026-01-18
+  const versionMatch = changelog.match(/## \[v?(\d+\.\d+\.\d+)\] - (\d{4}-\d{2}-\d{2})/)
+  if (!versionMatch) return undefined
+
+  const version = versionMatch[1]
+  const date = versionMatch[2]
+
+  // Find the content between this version header and the next
+  const versionHeaderStart = changelog.indexOf(versionMatch[0])
+  const contentStart = versionHeaderStart + versionMatch[0].length
+
+  // Find next version header or end of file
+  const nextVersionMatch = changelog.slice(contentStart).match(/\n## \[v?\d+\.\d+\.\d+\]/)
+  const contentEnd = nextVersionMatch
+    ? contentStart + (nextVersionMatch.index ?? changelog.length)
+    : changelog.length
+
+  const body = changelog.slice(contentStart, contentEnd).trim()
+
+  return { version, body, date }
+}
+
+/**
+ * Parse changelog content for a specific version
+ */
+function parseChangelogForVersion(changelog: string, targetVersion: string): string | undefined {
+  // Normalize version (remove 'v' prefix if present)
+  const normalizedTarget = targetVersion.replace(/^v/, '')
+
+  // Find the version header: ## [v0.2.1] - 2026-01-18 or ## [0.2.1] - 2026-01-18
+  const versionRegex = new RegExp(
+    `## \\[v?${normalizedTarget.replace(/\./g, '\\.')}\\] - \\d{4}-\\d{2}-\\d{2}`,
+  )
+  const versionMatch = changelog.match(versionRegex)
+  if (!versionMatch) return undefined
+
+  // Find the content between this version header and the next
+  const versionHeaderStart = changelog.indexOf(versionMatch[0])
+  const contentStart = versionHeaderStart + versionMatch[0].length
+
+  // Find next version header or end of file
+  const nextVersionMatch = changelog.slice(contentStart).match(/\n## \[v?\d+\.\d+\.\d+\]/)
+  const contentEnd = nextVersionMatch
+    ? contentStart + (nextVersionMatch.index ?? changelog.length)
+    : changelog.length
+
+  return changelog.slice(contentStart, contentEnd).trim()
+}

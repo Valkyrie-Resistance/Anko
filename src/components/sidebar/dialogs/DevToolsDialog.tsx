@@ -8,10 +8,12 @@ import {
   IconPlugConnected,
   IconRefresh,
   IconServer,
+  IconSparkles,
   IconTerminal,
   IconTrash,
   IconUpload,
 } from '@tabler/icons-react'
+import { getVersion } from '@tauri-apps/api/app'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -32,7 +34,9 @@ import {
   listWorkspaces,
   saveConnection,
 } from '@/lib/tauri'
+import { fetchLatestChangelog } from '@/lib/updater'
 import { useConnectionStore } from '@/stores/connection'
+import { useUpdateStore } from '@/stores/update'
 import { createDefaultWorkspace, DEFAULT_WORKSPACE_ID, useWorkspaceStore } from '@/stores/workspace'
 import type { ConnectionConfig, DatabaseDriver } from '@/types'
 import { ConfirmDialog } from './ConfirmDialog'
@@ -342,6 +346,45 @@ export function DevToolsDialog({ open, onOpenChange }: DevToolsDialogProps) {
     input.click()
   }
 
+  // Update store actions
+  const setUpdateAvailable = useUpdateStore((s) => s.setUpdateAvailable)
+  const setModalOpen = useUpdateStore((s) => s.setModalOpen)
+
+  // Test update modal with latest changelog
+  const handleTestUpdateModal = async () => {
+    setIsLoading(true)
+    try {
+      const parsed = await fetchLatestChangelog()
+      if (!parsed) throw new Error('Failed to fetch changelog')
+
+      const currentVersion = await getVersion()
+
+      // Set mock update info and open modal
+      setUpdateAvailable(
+        true,
+        {
+          version: parsed.version,
+          currentVersion: currentVersion,
+          body: parsed.body,
+          date: parsed.date,
+        },
+        null, // No actual Update object for testing
+      )
+      setModalOpen(true)
+      onOpenChange(false) // Close DevTools dialog
+
+      toast.success('Update modal opened', {
+        description: `Testing with changelog v${parsed.version}`,
+      })
+    } catch (e) {
+      toast.error('Failed to test update modal', {
+        description: formatErrorMessage(e),
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -466,6 +509,16 @@ export function DevToolsDialog({ open, onOpenChange }: DevToolsDialogProps) {
                 >
                   <IconBug className="size-4 mr-2" />
                   Debug: {debugMode ? 'On' : 'Off'}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="justify-start col-span-2"
+                  onClick={handleTestUpdateModal}
+                  disabled={isLoading}
+                >
+                  <IconSparkles className="size-4 mr-2" />
+                  Test Update Modal
                 </Button>
               </div>
 
