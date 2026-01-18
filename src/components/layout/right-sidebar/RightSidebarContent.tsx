@@ -131,14 +131,20 @@ function DataTabContent() {
 
   switch (context.type) {
     case 'row':
-      return <RowDetails row={context.row} columns={context.columns} />
+      return (
+        <div className="h-full overflow-hidden">
+          <RowDetails row={context.row} columns={context.columns} />
+        </div>
+      )
     case 'cell':
       return (
-        <CellDetails
-          value={context.value}
-          columnName={context.columnName}
-          columnType={context.columnType}
-        />
+        <div className="h-full overflow-hidden">
+          <CellDetails
+            value={context.value}
+            columnName={context.columnName}
+            columnType={context.columnType}
+          />
+        </div>
       )
     case 'table':
       return (

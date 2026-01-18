@@ -11,6 +11,8 @@
 //! - SQL injection protection with parameterized queries! 🔐
 
 use async_trait::async_trait;
+use bigdecimal::BigDecimal;
+use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use sqlx::{mysql::MySqlPoolOptions, Column, MySql, Pool, Row, TypeInfo};
 use std::time::Instant;
 
@@ -202,7 +204,8 @@ impl DatabaseConnector for MySqlConnector {
                             .iter()
                             .enumerate()
                             .map(|(i, col)| {
-                                let type_name = col.type_info().name();
+                                let type_name = col.type_info().name().to_uppercase();
+                                let type_name = type_name.as_str();
                                 match type_name {
                                     "BIGINT" | "INT" | "SMALLINT" | "TINYINT" | "MEDIUMINT" => {
                                         row.try_get::<i64, _>(i)
@@ -217,7 +220,7 @@ impl DatabaseConnector for MySqlConnector {
                                         .try_get::<u64, _>(i)
                                         .map(serde_json::Value::from)
                                         .unwrap_or(serde_json::Value::Null),
-                                    "FLOAT" | "DOUBLE" | "DECIMAL" => row
+                                    "FLOAT" | "DOUBLE" => row
                                         .try_get::<f64, _>(i)
                                         .map(|v| {
                                             serde_json::Number::from_f64(v)
@@ -225,14 +228,101 @@ impl DatabaseConnector for MySqlConnector {
                                                 .unwrap_or(serde_json::Value::Null)
                                         })
                                         .unwrap_or(serde_json::Value::Null),
+                                    "DECIMAL" | "NEWDECIMAL" => row
+                                        .try_get::<BigDecimal, _>(i)
+                                        .map(|v| serde_json::Value::String(v.to_string()))
+                                        .or_else(|_| {
+                                            // Fallback to f64 if BigDecimal fails
+                                            row.try_get::<f64, _>(i).map(|v| {
+                                                serde_json::Number::from_f64(v)
+                                                    .map(serde_json::Value::Number)
+                                                    .unwrap_or(serde_json::Value::Null)
+                                            })
+                                        })
+                                        .unwrap_or(serde_json::Value::Null),
+                                    "JSON" => row
+                                        .try_get::<serde_json::Value, _>(i)
+                                        .unwrap_or(serde_json::Value::Null),
+                                    // Date type (exact match, no precision qualifier)
+                                    "DATE" => row
+                                        .try_get::<NaiveDate, _>(i)
+                                        .map(|v| serde_json::Value::String(v.format("%Y-%m-%d").to_string()))
+                                        .unwrap_or(serde_json::Value::Null),
+                                    // DATETIME type (timezone-naive)
+                                    t if t.starts_with("DATETIME") => {
+                                        row.try_get::<Option<NaiveDateTime>, _>(i)
+                                            .ok()
+                                            .flatten()
+                                            .map(|v| serde_json::Value::String(v.format("%Y-%m-%d %H:%M:%S").to_string()))
+                                            .unwrap_or(serde_json::Value::Null)
+                                    }
+                                    // TIMESTAMP type (timezone-aware, stored as UTC)
+                                    t if t.starts_with("TIMESTAMP") => {
+                                        row.try_get::<Option<DateTime<Utc>>, _>(i)
+                                            .ok()
+                                            .flatten()
+                                            .map(|v| serde_json::Value::String(v.format("%Y-%m-%d %H:%M:%S").to_string()))
+                                            .unwrap_or(serde_json::Value::Null)
+                                    }
+                                    // Time type with optional precision (e.g., TIME(0), TIME(6))
+                                    t if t.starts_with("TIME") => row
+                                        .try_get::<NaiveTime, _>(i)
+                                        .map(|v| serde_json::Value::String(v.format("%H:%M:%S").to_string()))
+                                        .unwrap_or(serde_json::Value::Null),
+                                    // MySQL JSON is stored as binary internally, sqlx may report it as BLOB
+                                    "BLOB" | "BINARY" | "VARBINARY" | "LONGBLOB" | "MEDIUMBLOB" | "TINYBLOB" => {
+                                        // Try to get as JSON first (for JSON columns reported as BLOB)
+                                        if let Ok(json_val) = row.try_get::<serde_json::Value, _>(i) {
+                                            json_val
+                                        } else if let Ok(bytes) = row.try_get::<Vec<u8>, _>(i) {
+                                            // Try to parse bytes as JSON string
+                                            if let Ok(s) = String::from_utf8(bytes.clone()) {
+                                                if let Ok(json_val) = serde_json::from_str::<serde_json::Value>(&s) {
+                                                    json_val
+                                                } else {
+                                                    // Not valid JSON, return as string
+                                                    serde_json::Value::String(s)
+                                                }
+                                            } else {
+                                                // Binary data that's not valid UTF-8, encode as base64
+                                                serde_json::Value::String(format!("[binary: {} bytes]", bytes.len()))
+                                            }
+                                        } else {
+                                            serde_json::Value::Null
+                                        }
+                                    }
                                     "BOOLEAN" | "BOOL" => row
                                         .try_get::<bool, _>(i)
                                         .map(serde_json::Value::Bool)
                                         .unwrap_or(serde_json::Value::Null),
-                                    _ => row
-                                        .try_get::<String, _>(i)
-                                        .map(serde_json::Value::String)
-                                        .unwrap_or(serde_json::Value::Null),
+                                    // Fallback: try multiple types
+                                    _ => {
+                                        // Try as String first
+                                        if let Ok(v) = row.try_get::<String, _>(i) {
+                                            return serde_json::Value::String(v);
+                                        }
+                                        // Try as NaiveDateTime (for any datetime-like types we might have missed)
+                                        if let Ok(v) = row.try_get::<NaiveDateTime, _>(i) {
+                                            return serde_json::Value::String(v.format("%Y-%m-%d %H:%M:%S").to_string());
+                                        }
+                                        // Try as i64
+                                        if let Ok(v) = row.try_get::<i64, _>(i) {
+                                            return serde_json::Value::from(v);
+                                        }
+                                        // Try as f64
+                                        if let Ok(v) = row.try_get::<f64, _>(i) {
+                                            return serde_json::Number::from_f64(v)
+                                                .map(serde_json::Value::Number)
+                                                .unwrap_or(serde_json::Value::Null);
+                                        }
+                                        // Try as bytes and convert to string
+                                        if let Ok(bytes) = row.try_get::<Vec<u8>, _>(i) {
+                                            if let Ok(s) = String::from_utf8(bytes) {
+                                                return serde_json::Value::String(s);
+                                            }
+                                        }
+                                        serde_json::Value::Null
+                                    }
                                 }
                             })
                             .collect()

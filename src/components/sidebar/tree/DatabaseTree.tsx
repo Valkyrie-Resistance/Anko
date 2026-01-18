@@ -1,15 +1,16 @@
 import {
   IconDatabase as DatabaseIcon,
-  IconCode,
   IconColumns,
   IconCopy,
   IconEye,
   IconKey,
+  IconPencil,
   IconPlayerPlay,
   IconPlugConnected,
   IconRefresh,
   IconSchema,
   IconTable,
+  IconTrash,
 } from '@tabler/icons-react'
 import { memo, useCallback, useReducer, useRef } from 'react'
 import { toast } from 'sonner'
@@ -342,10 +343,16 @@ export function DatabaseTree({ connection, onEdit, onDelete, onInsertText }: Dat
             <IconPlugConnected className="size-4 mr-2" />
             Disconnect
           </ContextMenuItem>
-          {onEdit && <ContextMenuItem onClick={onEdit}>Edit Connection</ContextMenuItem>}
+          {onEdit && (
+            <ContextMenuItem onClick={onEdit}>
+              <IconPencil className="size-4 mr-2" />
+              Edit Connection
+            </ContextMenuItem>
+          )}
           <ContextMenuSeparator />
           {onDelete && (
             <ContextMenuItem className="text-destructive focus:text-destructive" onClick={onDelete}>
+              <IconTrash className="size-4 mr-2" />
               Delete Connection
             </ContextMenuItem>
           )}
@@ -495,10 +502,6 @@ const DatabaseNode = memo(
             <IconCopy className="size-4 mr-2" />
             Copy Name
           </ContextMenuItem>
-          <ContextMenuItem onClick={() => onInsertText?.(database.name)}>
-            <IconCode className="size-4 mr-2" />
-            Insert Name
-          </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuItem onClick={() => onRefreshTables?.('')}>
             <IconRefresh className="size-4 mr-2" />
@@ -603,10 +606,6 @@ const SchemaNode = memo(
             <IconCopy className="size-4 mr-2" />
             Copy Name
           </ContextMenuItem>
-          <ContextMenuItem onClick={() => onInsertText?.(schema.name)}>
-            <IconCode className="size-4 mr-2" />
-            Insert Name
-          </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
     )
@@ -708,10 +707,6 @@ const TableNode = memo(
           <ContextMenuItem onClick={handleCopyFullName}>
             <IconCopy className="size-4 mr-2" />
             Copy Full Name
-          </ContextMenuItem>
-          <ContextMenuItem onClick={() => onInsertText?.(table.name)}>
-            <IconCode className="size-4 mr-2" />
-            Insert Name
           </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuItem onClick={onRefreshColumns}>

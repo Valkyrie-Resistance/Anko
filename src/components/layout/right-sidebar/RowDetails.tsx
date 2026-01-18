@@ -2,7 +2,6 @@ import { IconChevronDown, IconChevronRight, IconClipboard } from '@tabler/icons-
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { formatValue, isJsonLike, prettyPrintJson } from '@/lib/zod-generator'
 import type { ColumnDetail } from '@/types'
 
@@ -23,8 +22,8 @@ export function RowDetails({ row, columns }: RowDetailsProps) {
   }
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-3 py-2 border-b">
+    <div className="flex flex-col h-full overflow-hidden">
+      <div className="flex items-center justify-between px-3 py-2 border-b shrink-0">
         <span className="text-xs font-medium text-foreground">Row Details</span>
         <button
           type="button"
@@ -35,7 +34,7 @@ export function RowDetails({ row, columns }: RowDetailsProps) {
           <IconClipboard className="size-3.5 text-muted-foreground" />
         </button>
       </div>
-      <ScrollArea className="flex-1">
+      <div className="flex-1 overflow-y-auto min-h-0">
         <div className="p-2 space-y-0.5">
           {columns.map((col) => (
             <FieldRow
@@ -46,7 +45,7 @@ export function RowDetails({ row, columns }: RowDetailsProps) {
             />
           ))}
         </div>
-      </ScrollArea>
+      </div>
     </div>
   )
 }
@@ -81,7 +80,7 @@ function FieldRow({ column, value, onCopy }: FieldRowProps) {
   // For short values, don't use collapsible
   if (!isLongValue) {
     return (
-      <div className="group rounded-md hover:bg-accent/30 transition-colors">
+      <div className="group/field rounded-md hover:bg-accent/30 transition-colors">
         <div className="flex items-center justify-between w-full px-2 py-1">
           <div className="flex items-center gap-1.5 min-w-0 flex-1">
             <div className="size-3 shrink-0" />
@@ -96,7 +95,7 @@ function FieldRow({ column, value, onCopy }: FieldRowProps) {
           <button
             type="button"
             onClick={onCopy}
-            className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-accent transition-all shrink-0"
+            className="invisible group-hover/field:visible p-1 rounded hover:bg-accent transition-all shrink-0"
             title="Copy value"
           >
             <IconClipboard className="size-3 text-muted-foreground" />
@@ -114,7 +113,7 @@ function FieldRow({ column, value, onCopy }: FieldRowProps) {
   // For long values, use collapsible
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <div className="group rounded-md hover:bg-accent/30 transition-colors">
+      <div className="group/field rounded-md hover:bg-accent/30 transition-colors">
         <div className="flex items-center justify-between w-full px-2 py-1">
           <CollapsibleTrigger className="flex items-center gap-1.5 min-w-0 flex-1 text-left">
             {isOpen ? (
@@ -133,7 +132,7 @@ function FieldRow({ column, value, onCopy }: FieldRowProps) {
           <button
             type="button"
             onClick={onCopy}
-            className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-accent transition-all shrink-0"
+            className="invisible group-hover/field:visible p-1 rounded hover:bg-accent transition-all shrink-0"
             title="Copy value"
           >
             <IconClipboard className="size-3 text-muted-foreground" />
