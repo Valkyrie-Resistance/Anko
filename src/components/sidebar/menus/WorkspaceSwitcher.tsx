@@ -1,4 +1,11 @@
-import { IconDatabase, IconEggs, IconPlus } from '@tabler/icons-react'
+import { IconDatabase, IconEggs, IconPencil, IconPlus, IconTrash } from '@tabler/icons-react'
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from '@/components/ui/context-menu'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,6 +23,8 @@ interface WorkspaceSwitcherProps {
   activeWorkspaceId?: string | null
   onWorkspaceSelect: (workspaceId: string) => void
   onNewWorkspace: () => void
+  onEditWorkspace?: (workspace: Workspace) => void
+  onDeleteWorkspace?: (workspace: Workspace) => void
 }
 
 export function WorkspaceIcon({ icon, className }: { icon: string; className?: string }) {
@@ -29,6 +38,8 @@ export function WorkspaceSwitcher({
   activeWorkspaceId,
   onWorkspaceSelect,
   onNewWorkspace,
+  onEditWorkspace,
+  onDeleteWorkspace,
 }: WorkspaceSwitcherProps) {
   return (
     <div className="p-2">
@@ -47,19 +58,40 @@ export function WorkspaceSwitcher({
           />
           <DropdownMenuContent side="right" align="start" sideOffset={8} className="min-w-48">
             {workspaces.map((workspace) => (
-              <DropdownMenuItem
-                key={workspace.id}
-                onClick={() => onWorkspaceSelect(workspace.id)}
-                className="gap-2"
-              >
-                <div className="flex size-6 items-center justify-center rounded border text-sm">
-                  <WorkspaceIcon icon={workspace.icon} />
-                </div>
-                <span className="flex-1 truncate">{workspace.name}</span>
-                {workspace.id === activeWorkspaceId && (
-                  <span className="text-xs text-muted-foreground">Active</span>
-                )}
-              </DropdownMenuItem>
+              <ContextMenu key={workspace.id}>
+                <ContextMenuTrigger>
+                  <DropdownMenuItem
+                    onClick={() => onWorkspaceSelect(workspace.id)}
+                    className="gap-2"
+                  >
+                    <div className="flex size-6 items-center justify-center rounded border text-sm">
+                      <WorkspaceIcon icon={workspace.icon} />
+                    </div>
+                    <span className="flex-1 truncate">{workspace.name}</span>
+                    {workspace.id === activeWorkspaceId && (
+                      <span className="text-xs text-muted-foreground">Active</span>
+                    )}
+                  </DropdownMenuItem>
+                </ContextMenuTrigger>
+                <ContextMenuContent>
+                  <ContextMenuItem onClick={() => onEditWorkspace?.(workspace)}>
+                    <IconPencil className="size-4 mr-2" />
+                    Edit Workspace
+                  </ContextMenuItem>
+                  {!workspace.isDefault && (
+                    <>
+                      <ContextMenuSeparator />
+                      <ContextMenuItem
+                        variant="destructive"
+                        onClick={() => onDeleteWorkspace?.(workspace)}
+                      >
+                        <IconTrash className="size-4 mr-2" />
+                        Delete Workspace
+                      </ContextMenuItem>
+                    </>
+                  )}
+                </ContextMenuContent>
+              </ContextMenu>
             ))}
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onNewWorkspace}>

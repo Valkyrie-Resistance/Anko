@@ -1,9 +1,10 @@
 import { IconDatabase, IconDeviceFloppy, IconHistory } from '@tabler/icons-react'
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import { ConnectionDialog } from '@/components/connection/ConnectionDialog'
 import { useTheme } from '@/components/theme/ThemeProvider'
 import { WorkspaceDialog } from '@/components/workspace/WorkspaceDialog'
-import { listWorkspaces } from '@/lib/tauri'
+import { deleteWorkspace, listWorkspaces } from '@/lib/tauri'
 import { cn } from '@/lib/utils'
 import { useLeftSidebarStore } from '@/stores/left-sidebar'
 import { useWorkspaceStore } from '@/stores/workspace'
@@ -33,6 +34,7 @@ export function AppSidebar({ onConnectionSelect }: AppSidebarProps) {
   const setWorkspaces = useWorkspaceStore((s) => s.setWorkspaces)
   const activeWorkspaceId = useWorkspaceStore((s) => s.activeWorkspaceId)
   const setActiveWorkspace = useWorkspaceStore((s) => s.setActiveWorkspace)
+  const removeWorkspace = useWorkspaceStore((s) => s.removeWorkspace)
 
   // Local state
   const [connectionDialogOpen, setConnectionDialogOpen] = useState(false)
@@ -68,6 +70,22 @@ export function AppSidebar({ onConnectionSelect }: AppSidebarProps) {
   const handleNewWorkspace = () => {
     setEditWorkspace(undefined)
     setWorkspaceDialogOpen(true)
+  }
+
+  const handleEditWorkspace = (workspace: Workspace) => {
+    setEditWorkspace(workspace)
+    setWorkspaceDialogOpen(true)
+  }
+
+  const handleDeleteWorkspace = async (workspace: Workspace) => {
+    try {
+      await deleteWorkspace(workspace.id)
+      removeWorkspace(workspace.id)
+      toast.success(`Workspace "${workspace.name}" deleted`)
+    } catch (e) {
+      console.error('Failed to delete workspace:', e)
+      toast.error('Failed to delete workspace')
+    }
   }
 
   const renderSidebarContent = () => {
@@ -123,6 +141,8 @@ export function AppSidebar({ onConnectionSelect }: AppSidebarProps) {
               activeWorkspaceId={activeWorkspaceId}
               onWorkspaceSelect={setActiveWorkspace}
               onNewWorkspace={handleNewWorkspace}
+              onEditWorkspace={handleEditWorkspace}
+              onDeleteWorkspace={handleDeleteWorkspace}
             />
 
             {/* Nav items */}
