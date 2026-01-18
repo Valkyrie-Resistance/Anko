@@ -23,6 +23,7 @@ import { executeQuery, getColumns } from '@/lib/tauri'
 import { ensureMinimumToastDuration } from '@/lib/toast-utils'
 import { cn } from '@/lib/utils'
 import { useConnectionStore } from '@/stores/connection'
+import { useRightSidebarStore } from '@/stores/right-sidebar'
 import type { DatabaseDriver, FilterCondition } from '@/types'
 import { UnsavedChangesDialog } from './UnsavedChangesDialog'
 
@@ -112,6 +113,7 @@ export function TableTabContent({ tabId }: TableTabContentProps) {
   const setCommittingRef = useRef(useConnectionStore.getState().setCommitting)
   const setCommitErrorRef = useRef(useConnectionStore.getState().setCommitError)
   const clearPendingChangesRef = useRef(useConnectionStore.getState().clearPendingChanges)
+  const showTableDetailsRef = useRef(useRightSidebarStore.getState().showTableDetails)
 
   // Note: Refs are initialized with getState() above and don't need updating
   // since Zustand store actions are stable references
@@ -168,6 +170,9 @@ export function TableTabContent({ tabId }: TableTabContentProps) {
         // Extract primary key columns
         const pkCols = cols.filter((c) => c.key === 'PRI').map((c) => c.name)
         initTableEditStateRef.current(tabId, pkCols)
+
+        // Set table context in right sidebar for Table/Utils tabs
+        showTableDetailsRef.current(tableName, cols, databaseName, schemaName)
       } catch (e) {
         console.error('Failed to fetch column details:', e)
       }

@@ -38,7 +38,7 @@ export function RowDetails({ row, columns }: RowDetailsProps) {
       <ScrollArea className="flex-1">
         <div className="p-2 space-y-0.5">
           {columns.map((col) => (
-            <CollapsibleFieldRow
+            <FieldRow
               key={col.name}
               column={col}
               value={row[col.name]}
@@ -51,13 +51,13 @@ export function RowDetails({ row, columns }: RowDetailsProps) {
   )
 }
 
-interface CollapsibleFieldRowProps {
+interface FieldRowProps {
   column: ColumnDetail
   value: unknown
   onCopy: () => void
 }
 
-function CollapsibleFieldRow({ column, value, onCopy }: CollapsibleFieldRowProps) {
+function FieldRow({ column, value, onCopy }: FieldRowProps) {
   const [isOpen, setIsOpen] = useState(true)
 
   const formattedValue = useMemo(() => {
@@ -78,19 +78,49 @@ function CollapsibleFieldRow({ column, value, onCopy }: CollapsibleFieldRowProps
   const isJson = isJsonLike(formattedValue)
   const isLongValue = formattedValue.length > 50 || formattedValue.includes('\n')
 
+  // For short values, don't use collapsible
+  if (!isLongValue) {
+    return (
+      <div className="group rounded-md hover:bg-accent/30 transition-colors">
+        <div className="flex items-center justify-between w-full px-2 py-1">
+          <div className="flex items-center gap-1.5 min-w-0 flex-1">
+            <div className="size-3 shrink-0" />
+            <span className="text-xs font-medium text-foreground truncate">{column.name}</span>
+            <span className="text-[10px] text-muted-foreground/60 shrink-0">{column.data_type}</span>
+            {column.key && (
+              <span className="text-[9px] px-1 py-0.5 rounded bg-primary/10 text-primary shrink-0">
+                {column.key}
+              </span>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={onCopy}
+            className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-accent transition-all shrink-0"
+            title="Copy value"
+          >
+            <IconClipboard className="size-3 text-muted-foreground" />
+          </button>
+        </div>
+        <div
+          className={`px-2 pb-1.5 pl-6 text-xs ${isNull ? 'text-muted-foreground italic' : 'text-foreground/80'}`}
+        >
+          {formattedValue}
+        </div>
+      </div>
+    )
+  }
+
+  // For long values, use collapsible
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
       <div className="group rounded-md hover:bg-accent/30 transition-colors">
         <div className="flex items-center justify-between w-full px-2 py-1">
           <CollapsibleTrigger className="flex items-center gap-1.5 min-w-0 flex-1 text-left">
-            {isLongValue ? (
-              isOpen ? (
-                <IconChevronDown className="size-3 text-muted-foreground shrink-0" />
-              ) : (
-                <IconChevronRight className="size-3 text-muted-foreground shrink-0" />
-              )
+            {isOpen ? (
+              <IconChevronDown className="size-3 text-muted-foreground shrink-0" />
             ) : (
-              <div className="size-3 shrink-0" />
+              <IconChevronRight className="size-3 text-muted-foreground shrink-0" />
             )}
             <span className="text-xs font-medium text-foreground truncate">{column.name}</span>
             <span className="text-[10px] text-muted-foreground/60 shrink-0">{column.data_type}</span>
@@ -110,6 +140,15 @@ function CollapsibleFieldRow({ column, value, onCopy }: CollapsibleFieldRowProps
           </button>
         </div>
 
+        {/* Collapsed preview */}
+        {!isOpen && (
+          <div className="px-2 pb-1.5 pl-6 text-[10px] text-muted-foreground truncate">
+            {formattedValue.split('\n')[0].slice(0, 40)}
+            {formattedValue.length > 40 && '...'}
+          </div>
+        )}
+
+        {/* Full content when expanded */}
         <CollapsibleContent>
           <div
             className={`px-2 pb-1.5 pl-6 text-xs ${isNull ? 'text-muted-foreground italic' : 'text-foreground/80'} ${
@@ -119,23 +158,6 @@ function CollapsibleFieldRow({ column, value, onCopy }: CollapsibleFieldRowProps
             {formattedValue}
           </div>
         </CollapsibleContent>
-
-        {/* Show inline preview when collapsed and value is long */}
-        {!isOpen && isLongValue && (
-          <div className="px-2 pb-1.5 pl-6 text-[10px] text-muted-foreground truncate">
-            {formattedValue.split('\n')[0].slice(0, 40)}
-            {formattedValue.length > 40 && '...'}
-          </div>
-        )}
-
-        {/* Show value inline for short values */}
-        {!isLongValue && (
-          <div
-            className={`px-2 pb-1.5 pl-6 text-xs ${isNull ? 'text-muted-foreground italic' : 'text-foreground/80'}`}
-          >
-            {formattedValue}
-          </div>
-        )}
       </div>
     </Collapsible>
   )
