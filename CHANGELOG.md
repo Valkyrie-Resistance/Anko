@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 <!-- CHANGELOG_INSERT_MARKER -->
+## [v0.2.2] - 2026-01-18
+
+### New Features
+
+- **Changelog in Updates**: Update modal now displays changelog from CHANGELOG.md instead of empty release notes
+- **Test Update Modal**: Added button in Developer Tools to test the update modal with latest changelog
+
 ## [v0.2.1] - 2026-01-18
 
 ### Bug Fixes
