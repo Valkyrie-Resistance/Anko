@@ -1,5 +1,6 @@
 import { IconClipboard } from '@tabler/icons-react'
 import { useMemo } from 'react'
+import ShikiHighlighter from 'react-shiki'
 import { toast } from 'sonner'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { generateZodSchema } from '@/lib/zod-generator'
@@ -37,9 +38,11 @@ export function ZodGeneratorView({ tableName, columns }: ZodGeneratorViewProps) 
         </button>
       </div>
       <ScrollArea className="flex-1">
-        <pre className="p-3 text-[10px] font-mono text-foreground/80 whitespace-pre-wrap">
-          {zodSchema}
-        </pre>
+        <div className="p-2 text-[11px] [&_pre]:!bg-transparent [&_pre]:!p-0 [&_pre]:!m-0 [&_code]:!text-[11px]">
+          <ShikiHighlighter language="typescript" theme="github-dark">
+            {zodSchema}
+          </ShikiHighlighter>
+        </div>
       </ScrollArea>
     </div>
   )
