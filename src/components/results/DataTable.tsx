@@ -222,9 +222,9 @@ export const DataTable = memo(function DataTable({
         name: col.name,
         data_type: col.data_type,
         nullable: col.nullable,
-        key: col.key,
-        default_value: col.default_value,
-        extra: col.extra,
+        key: (col as { key?: string }).key,
+        default_value: (col as { default_value?: string }).default_value,
+        extra: (col as { extra?: string }).extra,
       })),
     [result.columns],
   )
@@ -294,7 +294,7 @@ export const DataTable = memo(function DataTable({
     <div className="h-full flex flex-col bg-black overflow-hidden">
       {enableColumnVisibility && <DataTableToolbar table={table} />}
       <ContextMenu>
-        <ContextMenuTrigger asChild>
+        <ContextMenuTrigger>
           <div className="flex-1 overflow-auto">
             <Table className="w-full text-xs border-collapse">
               <TableHeader className="sticky top-0 z-10">

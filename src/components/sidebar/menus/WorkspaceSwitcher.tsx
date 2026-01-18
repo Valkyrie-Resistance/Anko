@@ -78,7 +78,7 @@ export function WorkspaceSwitcher({
                     <IconPencil className="size-4 mr-2" />
                     Edit Workspace
                   </ContextMenuItem>
-                  {!workspace.isDefault && (
+                  {!workspace.is_default && (
                     <>
                       <ContextMenuSeparator />
                       <ContextMenuItem

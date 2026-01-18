@@ -204,7 +204,7 @@ export function HistoryPanel() {
             onValueChange={(v) => setFilterConnectionId(v === 'all' ? null : v)}
           >
             <SelectTrigger className="h-7 w-24 text-xs">
-              <SelectValue placeholder="All" />
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All</SelectItem>
