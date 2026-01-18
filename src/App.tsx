@@ -2,11 +2,8 @@ import { getCurrentWindow } from '@tauri-apps/api/window'
 import { useCallback, useEffect, useState } from 'react'
 import { ErrorBoundary } from '@/components/errors/ErrorBoundary'
 import { CloseAppDialog, getCloseAppPreference } from '@/components/layout/CloseAppDialog'
-import {
-  RightSidebar,
-  RightSidebarContent,
-  RightSidebarHeader,
-} from '@/components/layout/RightSidebar'
+import { RightSidebar } from '@/components/layout/RightSidebar'
+import { RightSidebarContextContent } from '@/components/layout/right-sidebar'
 import { TitleBar } from '@/components/layout/TitleBar'
 import { TabContainer } from '@/components/layout/tabs'
 import { AppSidebar } from '@/components/sidebar/AppSidebar'
@@ -143,14 +140,7 @@ function App() {
           </main>
 
           <RightSidebar>
-            <RightSidebarHeader>
-              <span className="text-sm font-medium">Details</span>
-            </RightSidebarHeader>
-            <RightSidebarContent>
-              <p className="text-xs text-muted-foreground">
-                Select a table or query result to view details
-              </p>
-            </RightSidebarContent>
+            <RightSidebarContextContent />
           </RightSidebar>
         </div>
 
