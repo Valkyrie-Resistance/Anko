@@ -1,8 +1,10 @@
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type * as React from 'react'
 import { cn } from '@/lib/utils'
 import { useRightSidebarStore } from '@/stores/right-sidebar'
 
-const SIDEBAR_WIDTH = '16rem'
+const MIN_WIDTH = 200
+const MAX_WIDTH = 500
 
 interface RightSidebarProps {
   children?: React.ReactNode
@@ -11,6 +13,38 @@ interface RightSidebarProps {
 
 export function RightSidebar({ children, className }: RightSidebarProps) {
   const open = useRightSidebarStore((s) => s.open)
+  const width = useRightSidebarStore((s) => s.width)
+  const setWidth = useRightSidebarStore((s) => s.setWidth)
+
+  const [isResizing, setIsResizing] = useState(false)
+  const sidebarRef = useRef<HTMLDivElement>(null)
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    setIsResizing(true)
+  }, [])
+
+  useEffect(() => {
+    if (!isResizing) return
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!sidebarRef.current) return
+      const newWidth = window.innerWidth - e.clientX
+      setWidth(Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, newWidth)))
+    }
+
+    const handleMouseUp = () => {
+      setIsResizing(false)
+    }
+
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [isResizing, setWidth])
 
   return (
     <div
@@ -21,20 +55,32 @@ export function RightSidebar({ children, className }: RightSidebarProps) {
       {/* Gap element for layout */}
       <div
         className={cn(
-          'relative w-(--sidebar-width) bg-transparent transition-[width] duration-200 ease-linear',
+          'relative bg-transparent transition-[width] duration-200 ease-linear',
           !open && 'w-0',
         )}
-        style={{ '--sidebar-width': SIDEBAR_WIDTH } as React.CSSProperties}
+        style={{ width: open ? width : 0 }}
       />
       {/* Sidebar container */}
       <div
+        ref={sidebarRef}
         className={cn(
-          'fixed top-9 bottom-0 right-0 z-10 hidden w-(--sidebar-width) border-l bg-sidebar transition-[right] duration-200 ease-linear md:flex flex-col',
-          !open && 'right-[calc(var(--sidebar-width)*-1)]',
+          'fixed top-9 bottom-0 right-0 z-10 hidden border-l bg-sidebar transition-[right] duration-200 ease-linear md:flex flex-col',
+          !open && 'right-[-500px]',
+          isResizing && 'select-none',
           className,
         )}
-        style={{ '--sidebar-width': SIDEBAR_WIDTH } as React.CSSProperties}
+        style={{ width: open ? width : 0 }}
       >
+        {/* Resize handle */}
+        <div
+          role="separator"
+          aria-orientation="vertical"
+          onMouseDown={handleMouseDown}
+          className={cn(
+            'absolute left-0 top-0 bottom-0 w-1 cursor-col-resize z-20 hover:bg-primary/50 transition-colors',
+            isResizing && 'bg-primary/50',
+          )}
+        />
         {children}
       </div>
     </div>
