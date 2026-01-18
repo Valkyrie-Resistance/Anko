@@ -8,10 +8,13 @@
 //! - `connections`: CRUD operations for saved database connections
 //! - `encryption`: AES-256-GCM password encryption with OS keychain integration
 //! - `workspaces`: Groups of connections for organization
+//! - `query_history`: Query execution history tracking
 
 pub mod connections;
 pub mod encryption;
+pub mod query_history;
 pub mod workspaces;
 
 pub use connections::*;
+pub use query_history::*;
 pub use workspaces::*;

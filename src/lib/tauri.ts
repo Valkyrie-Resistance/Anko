@@ -1,8 +1,10 @@
 import { invoke } from '@tauri-apps/api/core'
 import type {
+  AddQueryHistoryInput,
   ColumnDetail,
   ConnectionConfig,
   ConnectionInfo,
+  QueryHistoryEntry,
   QueryResult,
   SchemaInfo,
   TableInfo,
@@ -173,6 +175,26 @@ export async function moveConnectionBetweenWorkspaces(
     fromWorkspaceId,
     toWorkspaceId,
   })
+}
+
+// Query History commands
+export async function addQueryHistory(input: AddQueryHistoryInput): Promise<QueryHistoryEntry> {
+  return trackedInvoke<QueryHistoryEntry>('add_query_history', { input })
+}
+
+export async function listQueryHistory(
+  connectionId?: string,
+  limit?: number,
+): Promise<QueryHistoryEntry[]> {
+  return trackedInvoke<QueryHistoryEntry[]>('list_query_history', { connectionId, limit })
+}
+
+export async function deleteQueryHistory(id: string): Promise<void> {
+  return trackedInvoke<void>('delete_query_history', { id })
+}
+
+export async function clearQueryHistory(): Promise<void> {
+  return trackedInvoke<void>('clear_query_history')
 }
 
 // Dev tools commands

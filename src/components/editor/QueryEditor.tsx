@@ -11,8 +11,9 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { createTimer, editorLogger } from '@/lib/debug'
 import { formatErrorMessage } from '@/lib/error-utils'
-import { executeQuery, getDatabases } from '@/lib/tauri'
+import { addQueryHistory, executeQuery, getDatabases } from '@/lib/tauri'
 import { useConnectionStore } from '@/stores/connection'
+import { useQueryHistoryStore } from '@/stores/query-history'
 import { useWorkspaceStore } from '@/stores/workspace'
 import { SQLEditor } from './SQLEditor'
 import type { SchemaContext } from './sql-autocomplete'
@@ -36,6 +37,7 @@ export function QueryEditor({ tabId }: QueryEditorProps) {
   const setQueryExecutingRef = useRef(useConnectionStore.getState().setQueryExecuting)
   const setSelectedDatabaseRef = useRef(useConnectionStore.getState().setSelectedDatabase)
   const setDatabasesRef = useRef(useConnectionStore.getState().setDatabases)
+  const addHistoryEntryRef = useRef(useQueryHistoryStore.getState().addEntry)
 
   // Note: Refs are initialized with getState() above and don't need updating
   // since Zustand store actions are stable references
@@ -126,30 +128,71 @@ export function QueryEditor({ tabId }: QueryEditorProps) {
     queryRef.current = tab?.query
   }, [tab?.query])
 
+  // Store connection info for history logging
+  const connectionName = connection?.info.name ?? ''
+
   const handleExecute = useCallback(async () => {
     const query = queryRef.current
-    if (!query?.trim() || !connectionId) return
+    if (!query?.trim() || !connectionId || !connectionInfoId) return
 
     editorLogger.debug('executing query', { tabId, connectionId, database: selectedDatabase, queryLength: query.length })
     const timer = createTimer(editorLogger, 'query execution')
+    const startTime = performance.now()
     setQueryExecutingRef.current(tabId, true)
 
     try {
       const result = await executeQuery(connectionId, query, selectedDatabase)
       setQueryResultRef.current(tabId, result)
       const rowCount = result.rows?.length ?? 0
+      const executionTimeMs = Math.round(performance.now() - startTime)
       timer.end({ rowCount, executionTimeMs: result.execution_time_ms })
+
+      // Log to history
+      addQueryHistory({
+        query: query.trim(),
+        connectionId: connectionInfoId,
+        connectionName,
+        databaseName: selectedDatabase ?? null,
+        executionTimeMs,
+        rowCount,
+        success: true,
+        errorMessage: null,
+      }).then((entry) => {
+        addHistoryEntryRef.current(entry)
+      }).catch((e) => {
+        editorLogger.warn('Failed to log query to history', e)
+      })
+
       toast.success('Query executed', {
         description: `${rowCount} row${rowCount !== 1 ? 's' : ''} returned`,
       })
     } catch (e) {
       timer.fail(e)
-      setQueryErrorRef.current(tabId, formatErrorMessage(e))
+      const executionTimeMs = Math.round(performance.now() - startTime)
+      const errorMessage = formatErrorMessage(e)
+      setQueryErrorRef.current(tabId, errorMessage)
+
+      // Log failed query to history
+      addQueryHistory({
+        query: query.trim(),
+        connectionId: connectionInfoId,
+        connectionName,
+        databaseName: selectedDatabase ?? null,
+        executionTimeMs,
+        rowCount: null,
+        success: false,
+        errorMessage,
+      }).then((entry) => {
+        addHistoryEntryRef.current(entry)
+      }).catch((err) => {
+        editorLogger.warn('Failed to log query to history', err)
+      })
+
       toast.error('Query failed', {
-        description: formatErrorMessage(e),
+        description: errorMessage,
       })
     }
-  }, [connectionId, tabId, selectedDatabase])
+  }, [connectionId, connectionInfoId, connectionName, tabId, selectedDatabase])
 
   const handleChange = useCallback(
     (value: string) => {

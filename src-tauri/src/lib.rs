@@ -60,6 +60,11 @@ pub fn run() {
             commands::add_connection_to_workspace,
             commands::remove_connection_from_workspace,
             commands::move_connection_between_workspaces,
+            // Storage commands - Query History
+            commands::add_query_history,
+            commands::list_query_history,
+            commands::delete_query_history,
+            commands::clear_query_history,
             // Dev tools commands
             commands::clear_all_data,
         ])
