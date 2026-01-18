@@ -10,6 +10,8 @@ CREATE TABLE authors (
     bio TEXT,
     avatar_url VARCHAR(500),
     website VARCHAR(255),
+    social_links JSONB,
+    preferences JSONB,
     is_verified BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     last_login TIMESTAMP WITH TIME ZONE
@@ -72,12 +74,27 @@ CREATE TABLE subscribers (
 );
 
 -- Insert authors
-INSERT INTO authors (username, email, display_name, bio, website, is_verified) VALUES
-('techwriter', 'alex.chen@blog.com', 'Alex Chen', 'Senior software engineer passionate about web technologies and developer experience.', 'https://alexchen.dev', TRUE),
-('designguru', 'maya.patel@blog.com', 'Maya Patel', 'UI/UX designer with 10 years of experience creating beautiful digital experiences.', 'https://mayapatel.design', TRUE),
-('dataenthusiast', 'jordan.kim@blog.com', 'Jordan Kim', 'Data scientist exploring the intersection of AI and everyday applications.', NULL, TRUE),
-('cloudninja', 'sam.oconnor@blog.com', 'Sam O''Connor', 'DevOps engineer specializing in cloud infrastructure and automation.', 'https://cloudninja.io', FALSE),
-('securitypro', 'taylor.nguyen@blog.com', 'Taylor Nguyen', 'Cybersecurity expert helping organizations stay safe in the digital age.', NULL, TRUE);
+INSERT INTO authors (username, email, display_name, bio, website, social_links, preferences, is_verified) VALUES
+('techwriter', 'alex.chen@blog.com', 'Alex Chen', 'Senior software engineer passionate about web technologies and developer experience.', 'https://alexchen.dev',
+  '{"twitter": "@alexchendev", "github": "alexchen", "linkedin": "alexchen-dev", "mastodon": "@alex@techhub.social"}',
+  '{"theme": "dark", "email_notifications": true, "newsletter_frequency": "weekly", "preferred_languages": ["TypeScript", "Python", "Rust"]}',
+  TRUE),
+('designguru', 'maya.patel@blog.com', 'Maya Patel', 'UI/UX designer with 10 years of experience creating beautiful digital experiences.', 'https://mayapatel.design',
+  '{"twitter": "@mayaDesigns", "dribbble": "mayapatel", "behance": "mayapatel", "instagram": "@maya.designs"}',
+  '{"theme": "light", "email_notifications": true, "newsletter_frequency": "monthly", "preferred_tools": ["Figma", "Sketch", "Adobe XD"]}',
+  TRUE),
+('dataenthusiast', 'jordan.kim@blog.com', 'Jordan Kim', 'Data scientist exploring the intersection of AI and everyday applications.', NULL,
+  '{"twitter": "@jordankimdata", "github": "jkim-data", "kaggle": "jordankim"}',
+  '{"theme": "system", "email_notifications": false, "newsletter_frequency": "never", "preferred_languages": ["Python", "R", "Julia"]}',
+  TRUE),
+('cloudninja', 'sam.oconnor@blog.com', 'Sam O''Connor', 'DevOps engineer specializing in cloud infrastructure and automation.', 'https://cloudninja.io',
+  '{"twitter": "@cloudninja_sam", "github": "cloudninja", "linkedin": "sam-oconnor-devops"}',
+  '{"theme": "dark", "email_notifications": true, "newsletter_frequency": "weekly", "cloud_providers": ["AWS", "GCP", "Azure"]}',
+  FALSE),
+('securitypro', 'taylor.nguyen@blog.com', 'Taylor Nguyen', 'Cybersecurity expert helping organizations stay safe in the digital age.', NULL,
+  '{"twitter": "@taylorsec", "github": "taylornguyen-sec", "linkedin": "taylor-nguyen-security"}',
+  '{"theme": "dark", "email_notifications": true, "newsletter_frequency": "weekly", "certifications": ["CISSP", "CEH", "OSCP"]}',
+  TRUE);
 
 -- Insert tags
 INSERT INTO tags (name, slug, description, color) VALUES
